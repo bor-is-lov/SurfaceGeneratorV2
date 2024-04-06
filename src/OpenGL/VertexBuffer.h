@@ -1,14 +1,17 @@
 #pragma once
 
-class VertexBuffer
+namespace OGL
 {
-	unsigned int m_RendererID;
-public:
-	VertexBuffer(const void* data, unsigned int size);
-	~VertexBuffer();
+	class VertexBuffer
+	{
+		unsigned int m_RendererID;
+	public:
+		VertexBuffer(const void* data, unsigned int size);
+		~VertexBuffer();
 
-	void Bind() const;
-	static void Unbind();
+		void Bind() const;
+		static void Unbind();
 
-	void Buffer(const void* data, unsigned int size);
-};
+		void Buffer(const void* data, unsigned int size);
+	};
+}
