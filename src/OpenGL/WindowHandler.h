@@ -17,20 +17,19 @@ namespace OGL
 {
 	class WindowHandler
 	{
-		GLFWwindow* window;
-		float zoom;
-		int window_max;
-		OGL::Renderer renderer;
-		glm::mat4 projection;
-		ImGuiContext* context;
-		ImGuiIO* io;
-		bool showGui;
+		GLFWwindow* m_Window;
+		Renderer m_Renderer;
+		ImGuiContext* m_context;
+		ImGuiIO* m_io;
 
 	public:
-		WindowHandler();
+		WindowHandler(const std::string& name);
 		~WindowHandler();
 
-		inline bool ShouldClose() { return glfwWindowShouldClose(window); }
+		inline bool ShouldClose() { return glfwWindowShouldClose(m_Window); }
+		inline GLFWwindow* window() { return m_Window; }
+		inline Renderer& renderer() { return m_Renderer; }
+		inline ImGuiIO* io() { return m_io; }
 
 		void StartRender();
 		void EndRender();

@@ -316,6 +316,8 @@
     <None Include="src\vendor\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Chunk\Chunk.h" />
+    <ClInclude Include="src\Chunk\ChunkGenerator.h" />
     <ClInclude Include="src\OpenGL\WindowHandler.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />

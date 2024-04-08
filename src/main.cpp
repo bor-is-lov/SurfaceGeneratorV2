@@ -7,8 +7,7 @@ int main()
 		std::cout << "GLFW Error: failed to initialize the library\n";
 		return -1;
 	}
-
-	OGL::WindowHandler window;
+	OGL::WindowHandler window("Surface Generator V2");
 
 	while (!window.ShouldClose())
 	{
