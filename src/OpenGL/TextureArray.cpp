@@ -7,9 +7,6 @@ namespace OGL
 	TextureArray::TextureArray(const std::string* paths, const unsigned int amount)
 		: m_RendererID(0), m_LocalBuffers(nullptr), m_Width(0), m_Height(0), m_BPP(0)
 	{
-		if (amount < 1)
-			ASSERT(false);
-
 		m_FilePaths.clear();
 		m_FilePaths.reserve(amount);
 		for (size_t i = 0; i < amount; i++)
@@ -17,24 +14,41 @@ namespace OGL
 
 		stbi_set_flip_vertically_on_load(1);
 
-		unsigned char* firstImage = stbi_load(m_FilePaths[0].c_str(), &m_Width, &m_Height, &m_BPP, 4);
+		unsigned char* firstImage = nullptr;
+		if (amount == 0)
+			m_Width = m_Height = 16;
+		else
+			firstImage = stbi_load(m_FilePaths[0].c_str(), &m_Width, &m_Height, &m_BPP, 4);
+
 		m_LocalBuffers = new unsigned char[m_Width * m_Height * 4 * (amount + 1)];
 		for (size_t i = 0; i < m_Width * m_Height; i++)
 		{
-			m_LocalBuffers[i * 4] = 0;
-			m_LocalBuffers[i * 4 + 1] = 0;
-			m_LocalBuffers[i * 4 + 2] = 0;
-			m_LocalBuffers[i * 4 + 3] = 255;
+			if (i % m_Width < m_Width / 2 && i < m_Width * m_Height / 2 || i % m_Width >= m_Width / 2 && i > m_Width * m_Height / 2)
+			{
+				m_LocalBuffers[i * 4] = 255; //r
+				m_LocalBuffers[i * 4 + 2] = 255; //b
+			}
+			else
+			{
+				m_LocalBuffers[i * 4] = 0; //r
+				m_LocalBuffers[i * 4 + 2] = 0; //b
+			}
+			m_LocalBuffers[i * 4 + 1] = 0; //g
+			m_LocalBuffers[i * 4 + 3] = 255; //a
 		}
-		for (size_t i = 0; i < m_Width * m_Height * 4; i++)
-			m_LocalBuffers[m_Width * m_Height * 4 + i] = firstImage[i];
-		stbi_image_free(firstImage);
-		for (size_t i = 2; i < amount + 1; i++)
+
+		if (amount > 0)
 		{
-			unsigned char* image = stbi_load(m_FilePaths[i - 1].c_str(), &m_Width, &m_Height, &m_BPP, 4);
-			for (size_t j = 0; j < m_Width * m_Height * 4; j++)
-				m_LocalBuffers[m_Width * m_Height * i * 4 + j] = image[j];
-			stbi_image_free(image);
+			for (size_t i = 0; i < m_Width * m_Height * 4; i++)
+				m_LocalBuffers[m_Width * m_Height * 4 + i] = firstImage[i];
+			stbi_image_free(firstImage);
+			for (size_t i = 2; i < amount + 1; i++)
+			{
+				unsigned char* image = stbi_load(m_FilePaths[i - 1].c_str(), &m_Width, &m_Height, &m_BPP, 4);
+				for (size_t j = 0; j < m_Width * m_Height * 4; j++)
+					m_LocalBuffers[m_Width * m_Height * i * 4 + j] = image[j];
+				stbi_image_free(image);
+			}
 		}
 
 		GlCall(glGenTextures(1, &m_RendererID));

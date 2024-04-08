@@ -66,6 +66,9 @@
     <ClCompile Include="src\OpenGL\WindowHandler.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\Drawer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\shader.vert" />
@@ -1411,6 +1414,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\Chunk\ChunkGenerator.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Drawer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Drawer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\OpenGL\WindowHandler.cpp" />
     <ClCompile Include="src\vendor\glm\detail\glm.cpp" />
@@ -318,6 +319,7 @@
   <ItemGroup>
     <ClInclude Include="src\Chunk\Chunk.h" />
     <ClInclude Include="src\Chunk\ChunkGenerator.h" />
+    <ClInclude Include="src\Drawer.h" />
     <ClInclude Include="src\OpenGL\WindowHandler.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />

@@ -1,4 +1,5 @@
 #include "OpenGL/WindowHandler.h"
+#include "Drawer.h"
 
 int main()
 {
@@ -8,10 +9,14 @@ int main()
 		return -1;
 	}
 	OGL::WindowHandler window("Surface Generator V2");
+	Drawer drawer(window.window());
 
 	while (!window.ShouldClose())
 	{
 		window.StartRender();
+		drawer.OnUpdate(0);
+		drawer.OnRender();
+		drawer.OnGuiRender();
 		window.EndRender();
 	}
 
