@@ -21,17 +21,17 @@ namespace OGL
 			firstImage = stbi_load(m_FilePaths[0].c_str(), &m_Width, &m_Height, &m_BPP, 4);
 
 		m_LocalBuffers = new unsigned char[m_Width * m_Height * 4 * (amount + 1)];
-		for (size_t i = 0; i < m_Width * m_Height; i++)
+		for (size_t i = 0; i < (size_t)m_Width * m_Height; i++)
 		{
-			if (i % m_Width < m_Width / 2 && i < m_Width * m_Height / 2 || i % m_Width >= m_Width / 2 && i > m_Width * m_Height / 2)
+			if (i % m_Width < (size_t)m_Width / 2 && i < (size_t)m_Width * m_Height / 2 || i % m_Width >= (size_t)m_Width / 2 && i > (size_t)m_Width * m_Height / 2)
 			{
-				m_LocalBuffers[i * 4] = 255; //r
-				m_LocalBuffers[i * 4 + 2] = 255; //b
+				m_LocalBuffers[i * 4]	  = 0; //r
+				m_LocalBuffers[i * 4 + 2] = 0; //b
 			}
 			else
 			{
-				m_LocalBuffers[i * 4] = 0; //r
-				m_LocalBuffers[i * 4 + 2] = 0; //b
+				m_LocalBuffers[i * 4]	  = 255; //r
+				m_LocalBuffers[i * 4 + 2] = 255; //b
 			}
 			m_LocalBuffers[i * 4 + 1] = 0; //g
 			m_LocalBuffers[i * 4 + 3] = 255; //a
@@ -39,13 +39,13 @@ namespace OGL
 
 		if (amount > 0)
 		{
-			for (size_t i = 0; i < m_Width * m_Height * 4; i++)
+			for (size_t i = 0; i < (size_t)m_Width * m_Height * 4; i++)
 				m_LocalBuffers[m_Width * m_Height * 4 + i] = firstImage[i];
 			stbi_image_free(firstImage);
 			for (size_t i = 2; i < amount + 1; i++)
 			{
 				unsigned char* image = stbi_load(m_FilePaths[i - 1].c_str(), &m_Width, &m_Height, &m_BPP, 4);
-				for (size_t j = 0; j < m_Width * m_Height * 4; j++)
+				for (size_t j = 0; j < (size_t)m_Width * m_Height * 4; j++)
 					m_LocalBuffers[m_Width * m_Height * i * 4 + j] = image[j];
 				stbi_image_free(image);
 			}
@@ -56,8 +56,8 @@ namespace OGL
 
 		GlCall(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, m_Width, m_Height, amount + 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffers));
 
-		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST)); // want it to be sharp
 		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
 		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
