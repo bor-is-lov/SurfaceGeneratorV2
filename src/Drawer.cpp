@@ -5,10 +5,16 @@ Drawer::Drawer(GLFWwindow* window)
 	: m_Window(window),
 	m_io(ImGui::GetIO()),
 	m_DrawGUI(true),
-	m_Zoom(4.0f),
+	m_Zoom(36.0f),
 	m_WindowMax(0),
 	m_ViewPos{0.0f, 0.0f},
 	m_Boost{0.0f, 0.0f},
+	
+	m_Indeces(nullptr),
+	m_Chunks(nullptr),
+	m_ChunksX(0),
+	m_ChunksY(0),
+
 	m_va(),
 	m_Layout(),
 	m_Shader("res/shaders/shader.vert", "res/shaders/shader.frag"),
@@ -17,11 +23,11 @@ Drawer::Drawer(GLFWwindow* window)
 {
 	m_Chunks = new Chunk[CHUNKS_AMOUNT];
 	m_Indeces = new unsigned int[INDECES_AMOUNT];
-
-	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+	
 	{
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
-		m_Chunks[i] = Chunk((int)i % width - width / 2, (int)i / width - width / 2);
+		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+			m_Chunks[i] = Chunk((int)i % width - width / 2, (int)i / width - width / 2);
 	}
 
 	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
@@ -80,7 +86,7 @@ void Drawer::OnUpdate(float deltaTime)
 	int width, height;
 	glfwGetFramebufferSize(m_Window, &width, &height);
 	float orthoWidth, orthoHeight;
-	if (width < height)
+	if (width > height)
 	{
 		m_WindowMax = height;
 		orthoHeight = m_Zoom;
@@ -93,6 +99,40 @@ void Drawer::OnUpdate(float deltaTime)
 		orthoWidth = m_Zoom;
 	}
 	m_Projection = glm::ortho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, -1.0f, 1.0f);
+
+	// update chunks
+	// TODO: update chunks textures if their coords updated
+	if ((int)m_ViewPos[0] - m_ChunksX != 0 || (int)m_ViewPos[1] - m_ChunksY != 0)
+	{
+		const int width = (int)sqrt(CHUNKS_AMOUNT);
+		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+		{
+			if (m_Chunks[i].x < -width / 2 - (int)m_ViewPos[0])
+				m_Chunks[i].x += width;
+			if (m_Chunks[i].x > width / 2 - (int)m_ViewPos[0])
+				m_Chunks[i].x -= width;
+			if (m_Chunks[i].y < -width / 2 - (int)m_ViewPos[1])
+				m_Chunks[i].y += width;
+			if (m_Chunks[i].y > width / 2 - (int)m_ViewPos[1])
+				m_Chunks[i].y -= width;
+		}
+
+		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+		{
+			m_Buffer[i * 20]	  = -0.5f + m_Chunks[i].x + 0.5f;
+			m_Buffer[i * 20 + 1]  = -0.5f + m_Chunks[i].y + 0.5f;
+			m_Buffer[i * 20 + 5]  =  0.5f + m_Chunks[i].x + 0.5f;
+			m_Buffer[i * 20 + 6]  = -0.5f + m_Chunks[i].y + 0.5f;
+			m_Buffer[i * 20 + 10] =  0.5f + m_Chunks[i].x + 0.5f;
+			m_Buffer[i * 20 + 11] =  0.5f + m_Chunks[i].y + 0.5f;
+			m_Buffer[i * 20 + 15] = -0.5f + m_Chunks[i].x + 0.5f;
+			m_Buffer[i * 20 + 16] =  0.5f + m_Chunks[i].y + 0.5f;
+		}
+		m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
+
+		m_ChunksX = (int)m_ViewPos[0];
+		m_ChunksY = (int)m_ViewPos[1];
+	}
 
 	// hide/show GUI
 	if (ImGui::IsKeyPressed(ImGuiKey_Escape) && !m_io.WantTextInput)
@@ -157,18 +197,6 @@ void Drawer::OnUpdate(float deltaTime)
 }
 void Drawer::OnRender()
 {
-	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
-	{
-		m_Buffer[i * 20]	  = -0.5f + m_Chunks[i].x + 0.5f;
-		m_Buffer[i * 20 + 1]  = -0.5f + m_Chunks[i].y + 0.5f;
-		m_Buffer[i * 20 + 5]  =  0.5f + m_Chunks[i].x + 0.5f;
-		m_Buffer[i * 20 + 6]  = -0.5f + m_Chunks[i].y + 0.5f;
-		m_Buffer[i * 20 + 10] =  0.5f + m_Chunks[i].x + 0.5f;
-		m_Buffer[i * 20 + 11] =  0.5f + m_Chunks[i].y + 0.5f;
-		m_Buffer[i * 20 + 15] = -0.5f + m_Chunks[i].x + 0.5f;
-		m_Buffer[i * 20 + 16] =  0.5f + m_Chunks[i].y + 0.5f;
-	}
-	m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(m_ViewPos[0], m_ViewPos[1], 0.0f));
 	glm::mat4 mvp = m_Projection * view;
 	m_Shader.SetUniformMat4f("u_MVP", mvp);

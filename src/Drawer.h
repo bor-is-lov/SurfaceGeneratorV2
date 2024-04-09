@@ -27,6 +27,7 @@ class Drawer
 	float m_Buffer[BUFFER_AMOUNT];
 	unsigned int* m_Indeces;
 	Chunk* m_Chunks;
+	long long m_ChunksX, m_ChunksY;
 
 	OGL::VertexArray m_va;
 	OGL::VertexBuffer* m_vb;
