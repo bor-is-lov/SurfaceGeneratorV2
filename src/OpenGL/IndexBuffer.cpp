@@ -7,7 +7,7 @@ namespace OGL
 		: m_Count(count)
 	{
 		GlCall(glGenBuffers(1, &m_RendererID));
-		GlCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID));
+		Bind();
 		GlCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), data, GL_STATIC_DRAW));
 	}
 

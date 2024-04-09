@@ -16,6 +16,8 @@ Drawer::Drawer(GLFWwindow* window)
 	m_Renderer()
 {
 	m_Chunks = new Chunk[CHUNKS_AMOUNT];
+	m_Indeces = new unsigned int[INDECES_AMOUNT];
+
 	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 	{
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
@@ -66,8 +68,11 @@ Drawer::Drawer(GLFWwindow* window)
 }
 Drawer::~Drawer()
 {
+	delete[] m_Chunks;
+	delete[] m_Indeces;
 	delete m_vb;
 	delete m_ib;
+	delete m_Textures;
 }
 void Drawer::OnUpdate(float deltaTime)
 {
@@ -95,34 +100,34 @@ void Drawer::OnUpdate(float deltaTime)
 
 	// move and zoom camera
 	if (ImGui::IsKeyDown(ImGuiKey_W) && !m_io.WantTextInput && m_Boost[1] > -0.025f)
-		m_Boost[1] -= 0.0001;
+		m_Boost[1] -= 0.0001f;
 	else if (m_Boost[1] < 0.0f)
 	{
-		m_Boost[1] += 0.0001;
+		m_Boost[1] += 0.0001f;
 		if(m_Boost[1] > 0.0f)
 			m_Boost[1] = 0.0f;
 	}
 	if (ImGui::IsKeyDown(ImGuiKey_S) && !m_io.WantTextInput &&m_Boost[1] < 0.025f)
-		m_Boost[1] += 0.0001;
+		m_Boost[1] += 0.0001f;
 	else if (m_Boost[1] > 0.0f)
 	{
-		m_Boost[1] -= 0.0001;
+		m_Boost[1] -= 0.0001f;
 		if(m_Boost[1] < 0.0f)
 			m_Boost[1] = 0.0f;
 	}
 	if (ImGui::IsKeyDown(ImGuiKey_D) && !m_io.WantTextInput &&m_Boost[0] > -0.025f)
-		m_Boost[0] -= 0.0001;
+		m_Boost[0] -= 0.0001f;
 	else if (m_Boost[0] < 0.0f)
 	{
-		m_Boost[0] += 0.0001;
+		m_Boost[0] += 0.0001f;
 		if(m_Boost[0] > 0.0f)
 			m_Boost[0] = 0.0f;
 	}
 	if (ImGui::IsKeyDown(ImGuiKey_A) && !m_io.WantTextInput &&m_Boost[0] < 0.025f)
-		m_Boost[0] += 0.0001;
+		m_Boost[0] += 0.0001f;
 	else if (m_Boost[0] > 0.0f)
 	{
-		m_Boost[0] -= 0.0001;
+		m_Boost[0] -= 0.0001f;
 		if (m_Boost[0] < 0.0f)
 			m_Boost[0] = 0.0f;
 	}
@@ -232,13 +237,17 @@ void Drawer::OnGuiRender()
 		ImGui::SameLine();
 		ImGui::Text(y);
 
-		if (ImGui::Button("tp to 0 0"))
+		static int tp[] = {0, 0};
+		if (ImGui::Button("tp to"))
 		{
 			m_Boost[0]	 = 0.0f;
 			m_Boost[1]	 = 0.0f;
-			m_ViewPos[0] = 0.0f;
-			m_ViewPos[1] = 0.0f;
+			m_ViewPos[0] = -tp[0] / 16.0f;
+			m_ViewPos[1] = -tp[1] / 16.0f;
 		}
+		ImGui::SameLine();
+		ImGui::InputInt2(" ", tp);
+
 		ImGui::Text("%.1f FPS", m_io.Framerate);
 		ImGui::End();
 	}

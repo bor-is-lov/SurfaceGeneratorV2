@@ -21,12 +21,11 @@ class Drawer
 	float m_ViewPos[2];
 	float m_Boost[2];
 
-	static const unsigned int CHUNKS_AMOUNT = 64*64,
-		POSITIONS_AMOUNT = 20 * CHUNKS_AMOUNT,
-		INDECES_AMOUNT   = 6  * CHUNKS_AMOUNT,
-		MODEL_AMOUNT	 = 2  * CHUNKS_AMOUNT;
-	float m_Buffer[POSITIONS_AMOUNT];
-	unsigned int m_Indeces[INDECES_AMOUNT];
+	static const unsigned int CHUNKS_AMOUNT = 64 * 64,
+		BUFFER_AMOUNT  = 20 * CHUNKS_AMOUNT,
+		INDECES_AMOUNT = 6  * CHUNKS_AMOUNT;
+	float m_Buffer[BUFFER_AMOUNT];
+	unsigned int* m_Indeces;
 	Chunk* m_Chunks;
 
 	OGL::VertexArray m_va;
