@@ -1,19 +1,25 @@
 #include "Drawer.h"
 #include <iostream>
 
+struct ChunkPos
+{
+	long long x, y;
+	ChunkPos() : x(0), y(0) {};
+	ChunkPos(long long x, long long y) : x(x), y(y) {};
+};
+
 Drawer::Drawer(GLFWwindow* window)
 	: m_Window(window),
 	m_io(ImGui::GetIO()),
 	m_DrawGUI(true),
-	m_Zoom(36.0f),
+	m_Zoom(4.0f),
 	m_WindowMax(0),
 	m_ViewPos{0.0f, 0.0f},
 	m_Boost{0.0f, 0.0f},
 	
 	m_Indeces(nullptr),
 	m_Chunks(nullptr),
-	m_ChunksX(0),
-	m_ChunksY(0),
+	m_ChunksCenter{0, 0},
 
 	m_va(),
 	m_Layout(),
@@ -21,13 +27,16 @@ Drawer::Drawer(GLFWwindow* window)
 	m_Projection(glm::ortho(-1.0f / 9 * 16, 1.0f / 9 * 16, -1.0f, 1.0f, -1.0f, 1.0f)),
 	m_Renderer()
 {
-	m_Chunks = new Chunk[CHUNKS_AMOUNT];
+	m_Chunks = new ChunkPos[CHUNKS_AMOUNT];
 	m_Indeces = new unsigned int[INDECES_AMOUNT];
 	
 	{
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
-			m_Chunks[i] = Chunk((int)i % width - width / 2, (int)i / width - width / 2);
+		{
+			m_Chunks[i].x = (int)i % width - width / 2;
+			m_Chunks[i].y = (int)i / width - width / 2;
+		}
 	}
 
 	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
@@ -86,7 +95,7 @@ void Drawer::OnUpdate(float deltaTime)
 	int width, height;
 	glfwGetFramebufferSize(m_Window, &width, &height);
 	float orthoWidth, orthoHeight;
-	if (width > height)
+	if (width < height)
 	{
 		m_WindowMax = height;
 		orthoHeight = m_Zoom;
@@ -102,7 +111,7 @@ void Drawer::OnUpdate(float deltaTime)
 
 	// update chunks
 	// TODO: update chunks textures if their coords updated
-	if ((int)m_ViewPos[0] - m_ChunksX != 0 || (int)m_ViewPos[1] - m_ChunksY != 0)
+	if ((int)m_ViewPos[0] - m_ChunksCenter[0] != 0 || (int)m_ViewPos[1] - m_ChunksCenter[1] != 0)
 	{
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
@@ -130,8 +139,8 @@ void Drawer::OnUpdate(float deltaTime)
 		}
 		m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 
-		m_ChunksX = (int)m_ViewPos[0];
-		m_ChunksY = (int)m_ViewPos[1];
+		m_ChunksCenter[0] = (int)m_ViewPos[0];
+		m_ChunksCenter[1] = (int)m_ViewPos[1];
 	}
 
 	// hide/show GUI
@@ -182,8 +191,8 @@ void Drawer::OnUpdate(float deltaTime)
 	if (m_io.MouseWheel < 0 && !m_io.WantCaptureMouse)
 	{
 		m_Zoom /= 0.95f;
-		if (m_Zoom > 32.0f)
-			m_Zoom = 32.0f;
+		if (m_Zoom > 30.0f)
+			m_Zoom = 30.0f;
 	}
 	if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
 		m_Zoom = 4.0f;
@@ -272,6 +281,13 @@ void Drawer::OnGuiRender()
 			m_Boost[1]	 = 0.0f;
 			m_ViewPos[0] = -tp[0] / 16.0f;
 			m_ViewPos[1] = -tp[1] / 16.0f;
+
+			const int width = (int)sqrt(CHUNKS_AMOUNT);
+			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+			{
+				m_Chunks[i].x = (int)i % width - width / 2 - (int)m_ViewPos[0];
+				m_Chunks[i].y = (int)i / width - width / 2 - (int)m_ViewPos[1];
+			}
 		}
 		ImGui::SameLine();
 		ImGui::InputInt2(" ", tp);

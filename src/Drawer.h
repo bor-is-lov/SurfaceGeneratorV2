@@ -9,7 +9,7 @@
 #include "OpenGL/VertexArray.h"
 #include "OpenGL/TextureArray.h"
 
-#include "Chunk/Chunk.h"
+struct ChunkPos;
 
 class Drawer
 {
@@ -26,8 +26,8 @@ class Drawer
 		INDECES_AMOUNT = 6  * CHUNKS_AMOUNT;
 	float m_Buffer[BUFFER_AMOUNT];
 	unsigned int* m_Indeces;
-	Chunk* m_Chunks;
-	long long m_ChunksX, m_ChunksY;
+	ChunkPos* m_Chunks;
+	long long m_ChunksCenter[2];
 
 	OGL::VertexArray m_va;
 	OGL::VertexBuffer* m_vb;
