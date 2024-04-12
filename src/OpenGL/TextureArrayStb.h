@@ -5,16 +5,16 @@
 
 namespace OGL
 {
-	class Texture
+	class TextureArrayStb
 	{
 		unsigned int m_RendererID;
-		std::string m_FilePath;
-		unsigned char* m_LocalBuffer;
+		std::vector<std::string> m_FilePaths;
+		unsigned char* m_LocalBuffers;
 		int m_Width, m_Height, m_BPP;
 
 	public:
-		Texture(const std::string& path);
-		~Texture();
+		TextureArrayStb(const std::string* paths, const unsigned int amount);
+		~TextureArrayStb();
 
 		void Bind(unsigned int slot = 0) const;
 		static void Unbind();

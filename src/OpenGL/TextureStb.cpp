@@ -1,11 +1,11 @@
-#include "Texture.h"
+#include "TextureStb.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 namespace OGL
 {
-	Texture::Texture(const std::string& path)
+	TextureStb::TextureStb(const std::string& path)
 		: m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0)
 	{
 		stbi_set_flip_vertically_on_load(1);
@@ -27,18 +27,18 @@ namespace OGL
 
 	}
 
-	Texture::~Texture()
+	TextureStb::~TextureStb()
 	{
 		GlCall(glDeleteTextures(1, &m_RendererID));
 	}
 
-	void Texture::Bind(unsigned int slot) const
+	void TextureStb::Bind(unsigned int slot) const
 	{
 		GlCall(glActiveTexture(GL_TEXTURE0 + slot));
 		GlCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 	}
 
-	void Texture::Unbind()
+	void TextureStb::Unbind()
 	{
 		GlCall(glBindTexture(GL_TEXTURE_2D, 0));
 	}

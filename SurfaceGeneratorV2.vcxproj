@@ -155,8 +155,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Chunk\ChunkManager.cpp" />
     <ClCompile Include="src\Drawer.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\OpenGL\TextureArrayStb.cpp" />
     <ClCompile Include="src\OpenGL\WindowHandler.cpp" />
     <ClCompile Include="src\vendor\glm\detail\glm.cpp" />
     <ClCompile Include="src\vendor\ImGUI\imgui.cpp" />
@@ -169,7 +171,7 @@
     <ClCompile Include="src\OpenGL\IndexBuffer.cpp" />
     <ClCompile Include="src\OpenGL\Renderer.cpp" />
     <ClCompile Include="src\OpenGL\Shader.cpp" />
-    <ClCompile Include="src\OpenGL\Texture.cpp" />
+    <ClCompile Include="src\OpenGL\TextureStb.cpp" />
     <ClCompile Include="src\OpenGL\TextureArray.cpp" />
     <ClCompile Include="src\OpenGL\VertexArray.cpp" />
     <ClCompile Include="src\OpenGL\VertexBuffer.cpp" />
@@ -319,7 +321,9 @@
   <ItemGroup>
     <ClInclude Include="src\Chunk\Chunk.h" />
     <ClInclude Include="src\Chunk\ChunkGenerator.h" />
+    <ClInclude Include="src\Chunk\ChunkManager.h" />
     <ClInclude Include="src\Drawer.h" />
+    <ClInclude Include="src\OpenGL\TextureArrayStb.h" />
     <ClInclude Include="src\OpenGL\WindowHandler.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
@@ -623,7 +627,7 @@
     <ClInclude Include="src\OpenGL\IndexBuffer.h" />
     <ClInclude Include="src\OpenGL\Renderer.h" />
     <ClInclude Include="src\OpenGL\Shader.h" />
-    <ClInclude Include="src\OpenGL\Texture.h" />
+    <ClInclude Include="src\OpenGL\TextureStb.h" />
     <ClInclude Include="src\OpenGL\TextureArray.h" />
     <ClInclude Include="src\OpenGL\VertexArray.h" />
     <ClInclude Include="src\OpenGL\VertexBuffer.h" />

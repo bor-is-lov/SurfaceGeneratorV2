@@ -27,7 +27,7 @@
     <ClCompile Include="src\OpenGL\Shader.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\OpenGL\Texture.cpp">
+    <ClCompile Include="src\OpenGL\TextureStb.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="src\OpenGL\TextureArray.cpp">
@@ -67,6 +67,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="src\Drawer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Chunk\ChunkManager.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OpenGL\TextureArrayStb.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -501,7 +507,7 @@
     <ClInclude Include="src\OpenGL\Shader.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\OpenGL\Texture.h">
+    <ClInclude Include="src\OpenGL\TextureStb.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\OpenGL\TextureArray.h">
@@ -1417,6 +1423,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\Drawer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Chunk\ChunkManager.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OpenGL\TextureArrayStb.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
