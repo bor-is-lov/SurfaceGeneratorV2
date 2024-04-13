@@ -30,6 +30,7 @@ class Drawer
 	unsigned int* m_Indeces;
 	ChunkInfo* m_ChunksInfo;
 	long long m_ChunksCenter[2];
+	unsigned int m_RenderDistance;
 	ChunkManager m_Manager;
 
 	OGL::VertexArray m_va;

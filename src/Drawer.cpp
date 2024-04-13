@@ -5,22 +5,24 @@ struct ChunkInfo
 {
 	long long x, y;
 	unsigned int textureID;
-	ChunkInfo() : x(0), y(0), textureID(0) {};
+	ChunkInfo() : x(0), y(0), textureID(0) {}; // -1 is no texture (solid black)
 	ChunkInfo(long long x, long long y) : x(x), y(y), textureID(0) {};
 };
 
 Drawer::Drawer(GLFWwindow* window)
 	: m_Window(window),
 	m_io(ImGui::GetIO()),
-	m_DrawGUI(false),
-	m_Zoom(64.0f),
+	m_DrawGUI(true),
+	m_Zoom(30.0f),
 	m_WindowMax(0),
 	m_ViewPos{0.0f, 0.0f},
 	m_Boost{0.0f, 0.0f},
-	
+
 	m_Indeces(nullptr),
 	m_ChunksInfo(nullptr),
 	m_ChunksCenter{0, 0},
+	m_RenderDistance(16),
+	m_Manager(),
 
 	m_va(),
 	m_Layout(),
@@ -47,22 +49,31 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Buffer[i * 20 + 1]  = m_ChunksInfo[i].y;
 		m_Buffer[i * 20 + 2]  = 0.0f;
 		m_Buffer[i * 20 + 3]  = 0.0f;
-		m_Buffer[i * 20 + 4]  = m_ChunksInfo[i].textureID = i;
 		m_Buffer[i * 20 + 5]  = m_ChunksInfo[i].x + 1.0f;
 		m_Buffer[i * 20 + 6]  = m_ChunksInfo[i].y;
 		m_Buffer[i * 20 + 7]  = 1.0f;
 		m_Buffer[i * 20 + 8]  = 0.0f;
-		m_Buffer[i * 20 + 9]  = m_ChunksInfo[i].textureID = i;
 		m_Buffer[i * 20 + 10] = m_ChunksInfo[i].x + 1.0f;
 		m_Buffer[i * 20 + 11] = m_ChunksInfo[i].y + 1.0f;
 		m_Buffer[i * 20 + 12] = 1.0f;
 		m_Buffer[i * 20 + 13] = 1.0f;
-		m_Buffer[i * 20 + 14] = m_ChunksInfo[i].textureID = i;
 		m_Buffer[i * 20 + 15] = m_ChunksInfo[i].x;
 		m_Buffer[i * 20 + 16] = m_ChunksInfo[i].y + 1.0f;
 		m_Buffer[i * 20 + 17] = 0.0f;
 		m_Buffer[i * 20 + 18] = 1.0f;
-		m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID = i;
+
+		if(m_ChunksInfo[i].x * m_ChunksInfo[i].x + m_ChunksInfo[i].y * m_ChunksInfo[i].y <= m_RenderDistance*m_RenderDistance)
+			m_Buffer[i * 20 + 4] =
+			m_Buffer[i * 20 + 9] =
+			m_Buffer[i * 20 + 14] =
+			m_Buffer[i * 20 + 19] =
+			m_ChunksInfo[i].textureID = i;
+		else
+			m_Buffer[i * 20 + 4] =
+			m_Buffer[i * 20 + 9] =
+			m_Buffer[i * 20 + 14] =
+			m_Buffer[i * 20 + 19] =
+			m_ChunksInfo[i].textureID = -1;
 
 		m_Indeces[i * 6]	 = i * 4;
 		m_Indeces[i * 6 + 1] = i * 4 + 1;
@@ -89,6 +100,7 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Textures.SubImage(texture, i);
 	}
 }
+
 Drawer::~Drawer()
 {
 	delete[] m_ChunksInfo;
@@ -96,33 +108,52 @@ Drawer::~Drawer()
 	delete m_vb;
 	delete m_ib;
 }
+
 void Drawer::OnUpdate(float deltaTime)
 {
 	// Zoom & window_min set for mouse dragging
-	int width, height;
-	glfwGetFramebufferSize(m_Window, &width, &height);
-	float orthoWidth, orthoHeight;
-	if (width < height)
 	{
-		m_WindowMax = height;
-		orthoHeight = m_Zoom;
-		orthoWidth = (float)width / height * m_Zoom;
+		int width, height;
+		glfwGetFramebufferSize(m_Window, &width, &height);
+		float orthoWidth, orthoHeight;
+		if (width < height)
+		{
+			m_WindowMax = height;
+			orthoHeight = m_Zoom;
+			orthoWidth = (float)width / height * m_Zoom;
+		}
+		else
+		{
+			m_WindowMax = width;
+			orthoHeight = (float)height / width * m_Zoom;
+			orthoWidth = m_Zoom;
+		}
+		m_Projection = glm::ortho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, -1.0f, 1.0f);
 	}
-	else
-	{
-		m_WindowMax = width;
-		orthoHeight = (float)height / width * m_Zoom;
-		orthoWidth = m_Zoom;
-	}
-	m_Projection = glm::ortho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, -1.0f, 1.0f);
 
 	// update chunks
 	// TODO: update chunks textures if their coords updated
 	if ((int)m_ViewPos[0] - m_ChunksCenter[0] != 0 || (int)m_ViewPos[1] - m_ChunksCenter[1] != 0)
 	{
+		m_ChunksCenter[0] = (int)m_ViewPos[0];
+		m_ChunksCenter[1] = (int)m_ViewPos[1];
+
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 		{
+			if((m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance*m_RenderDistance)
+				m_Buffer[i * 20 + 4] =
+				m_Buffer[i * 20 + 9] =
+				m_Buffer[i * 20 + 14] =
+				m_Buffer[i * 20 + 19] =
+				m_ChunksInfo[i].textureID = i;
+			else
+				m_Buffer[i * 20 + 4] =
+				m_Buffer[i * 20 + 9] =
+				m_Buffer[i * 20 + 14] =
+				m_Buffer[i * 20 + 19] =
+				m_ChunksInfo[i].textureID = -1;
+
 			if (m_ChunksInfo[i].x < -width / 2 - (int)m_ViewPos[0])
 				m_ChunksInfo[i].x += width;
 			if (m_ChunksInfo[i].x > width / 2 - (int)m_ViewPos[0])
@@ -131,10 +162,7 @@ void Drawer::OnUpdate(float deltaTime)
 				m_ChunksInfo[i].y += width;
 			if (m_ChunksInfo[i].y > width / 2 - (int)m_ViewPos[1])
 				m_ChunksInfo[i].y -= width;
-		}
 
-		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
-		{
 			m_Buffer[i * 20]	  =  m_ChunksInfo[i].x;
 			m_Buffer[i * 20 + 1]  =  m_ChunksInfo[i].y;
 			m_Buffer[i * 20 + 5]  =  m_ChunksInfo[i].x + 1.0f;
@@ -145,9 +173,6 @@ void Drawer::OnUpdate(float deltaTime)
 			m_Buffer[i * 20 + 16] =  m_ChunksInfo[i].y + 1.0f;
 		}
 		m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
-
-		m_ChunksCenter[0] = (int)m_ViewPos[0];
-		m_ChunksCenter[1] = (int)m_ViewPos[1];
 	}
 
 	// hide/show GUI
@@ -155,62 +180,65 @@ void Drawer::OnUpdate(float deltaTime)
 		m_DrawGUI = !m_DrawGUI;
 
 	// move and zoom camera
-	if (ImGui::IsKeyDown(ImGuiKey_W) && !m_io.WantTextInput && m_Boost[1] > -0.025f)
-		m_Boost[1] -= 0.0001f;
-	else if (m_Boost[1] < 0.0f)
 	{
-		m_Boost[1] += 0.0001f;
-		if(m_Boost[1] > 0.0f)
-			m_Boost[1] = 0.0f;
-	}
-	if (ImGui::IsKeyDown(ImGuiKey_S) && !m_io.WantTextInput &&m_Boost[1] < 0.025f)
-		m_Boost[1] += 0.0001f;
-	else if (m_Boost[1] > 0.0f)
-	{
-		m_Boost[1] -= 0.0001f;
-		if(m_Boost[1] < 0.0f)
-			m_Boost[1] = 0.0f;
-	}
-	if (ImGui::IsKeyDown(ImGuiKey_D) && !m_io.WantTextInput &&m_Boost[0] > -0.025f)
-		m_Boost[0] -= 0.0001f;
-	else if (m_Boost[0] < 0.0f)
-	{
-		m_Boost[0] += 0.0001f;
-		if(m_Boost[0] > 0.0f)
+		if (ImGui::IsKeyDown(ImGuiKey_W) && !m_io.WantTextInput && m_Boost[1] > -0.025f)
+			m_Boost[1] -= 0.0001f;
+		else if (m_Boost[1] < 0.0f)
+		{
+			m_Boost[1] += 0.0001f;
+			if (m_Boost[1] > 0.0f)
+				m_Boost[1] = 0.0f;
+		}
+		if (ImGui::IsKeyDown(ImGuiKey_S) && !m_io.WantTextInput && m_Boost[1] < 0.025f)
+			m_Boost[1] += 0.0001f;
+		else if (m_Boost[1] > 0.0f)
+		{
+			m_Boost[1] -= 0.0001f;
+			if (m_Boost[1] < 0.0f)
+				m_Boost[1] = 0.0f;
+		}
+		if (ImGui::IsKeyDown(ImGuiKey_D) && !m_io.WantTextInput && m_Boost[0] > -0.025f)
+			m_Boost[0] -= 0.0001f;
+		else if (m_Boost[0] < 0.0f)
+		{
+			m_Boost[0] += 0.0001f;
+			if (m_Boost[0] > 0.0f)
+				m_Boost[0] = 0.0f;
+		}
+		if (ImGui::IsKeyDown(ImGuiKey_A) && !m_io.WantTextInput && m_Boost[0] < 0.025f)
+			m_Boost[0] += 0.0001f;
+		else if (m_Boost[0] > 0.0f)
+		{
+			m_Boost[0] -= 0.0001f;
+			if (m_Boost[0] < 0.0f)
+				m_Boost[0] = 0.0f;
+		}
+		m_ViewPos[0] += m_Boost[0] * m_Zoom;
+		m_ViewPos[1] += m_Boost[1] * m_Zoom;
+		if (m_io.MouseWheel > 0 && !m_io.WantCaptureMouse)
+		{
+			m_Zoom *= 0.95f;
+			if (m_Zoom < 0.1f)
+				m_Zoom = 0.1f;
+		}
+		if (m_io.MouseWheel < 0 && !m_io.WantCaptureMouse)
+		{
+			m_Zoom /= 0.95f;
+			if (m_Zoom > 30.0f)
+				m_Zoom = 30.0f;
+		}
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
+			m_Zoom = 4.0f;
+		if (!m_io.WantCaptureMouse && (ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::IsMouseDown(ImGuiMouseButton_Right)))
+		{
 			m_Boost[0] = 0.0f;
-	}
-	if (ImGui::IsKeyDown(ImGuiKey_A) && !m_io.WantTextInput &&m_Boost[0] < 0.025f)
-		m_Boost[0] += 0.0001f;
-	else if (m_Boost[0] > 0.0f)
-	{
-		m_Boost[0] -= 0.0001f;
-		if (m_Boost[0] < 0.0f)
-			m_Boost[0] = 0.0f;
-	}
-	m_ViewPos[0] += m_Boost[0] * m_Zoom;
-	m_ViewPos[1] += m_Boost[1] * m_Zoom;
-	if (m_io.MouseWheel > 0 && !m_io.WantCaptureMouse)
-	{
-		m_Zoom *= 0.95f;
-		if (m_Zoom < 0.1f)
-			m_Zoom = 0.1f;
-	}
-	if (m_io.MouseWheel < 0 && !m_io.WantCaptureMouse)
-	{
-		m_Zoom /= 0.95f;
-		if (m_Zoom > 30.0f)
-			m_Zoom = 30.0f;
-	}
-	if (ImGui::IsMouseClicked(ImGuiMouseButton_Middle))
-		m_Zoom = 4.0f;
-	if (!m_io.WantCaptureMouse && (ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::IsMouseDown(ImGuiMouseButton_Right)))
-	{
-		m_Boost[0] = 0.0f;
-		m_Boost[1] = 0.0f;
-		m_ViewPos[0] += m_io.MouseDelta.x / m_WindowMax * 2 * m_Zoom;
-		m_ViewPos[1] -= m_io.MouseDelta.y / m_WindowMax * 2 * m_Zoom;
+			m_Boost[1] = 0.0f;
+			m_ViewPos[0] += m_io.MouseDelta.x / m_WindowMax * 2 * m_Zoom;
+			m_ViewPos[1] -= m_io.MouseDelta.y / m_WindowMax * 2 * m_Zoom;
+		}
 	}
 }
+
 void Drawer::OnRender()
 {
 	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(m_ViewPos[0], m_ViewPos[1], 0.0f));
@@ -219,6 +247,7 @@ void Drawer::OnRender()
 
 	m_Renderer.Draw(m_va, *m_ib, m_Shader);
 }
+
 void Drawer::OnGuiRender()
 {
 	if (m_DrawGUI)
@@ -298,6 +327,28 @@ void Drawer::OnGuiRender()
 		}
 		ImGui::SameLine();
 		ImGui::InputInt2(" ", tp);
+
+		if (ImGui::SliderInt("Render distance", (int*)&m_RenderDistance, 0, 32))
+		{
+			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+			{
+				if ((m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance * m_RenderDistance)
+					m_Buffer[i * 20 + 4] =
+					m_Buffer[i * 20 + 9] =
+					m_Buffer[i * 20 + 14] =
+					m_Buffer[i * 20 + 19] =
+					m_ChunksInfo[i].textureID = i;
+				else
+					m_Buffer[i * 20 + 4] =
+					m_Buffer[i * 20 + 9] =
+					m_Buffer[i * 20 + 14] =
+					m_Buffer[i * 20 + 19] =
+					m_ChunksInfo[i].textureID = -1;
+			}
+			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
+		}
+
+		ImGui::Separator();
 
 		ImGui::Text("%.1f FPS", m_io.Framerate);
 		ImGui::End();

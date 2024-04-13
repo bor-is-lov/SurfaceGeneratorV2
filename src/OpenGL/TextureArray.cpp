@@ -9,23 +9,6 @@ namespace OGL
 			ASSERT(false);
 
 		m_LocalBuffers = new unsigned char[m_Width * m_Height * m_Reserved * 4];
-
-		for (size_t i = 0; i < m_Width * m_Height; i++)
-		{
-			if (i % m_Width < m_Width / 2 && i < m_Width * m_Height / 2 || i % m_Width >= m_Width / 2 && i > m_Width * m_Height / 2)
-			{
-				m_LocalBuffers[i * 4]	  = 0; //r
-				m_LocalBuffers[i * 4 + 2] = 0; //b
-			}
-			else
-			{
-				m_LocalBuffers[i * 4]	  = 255; //r
-				m_LocalBuffers[i * 4 + 2] = 255; //b
-			}
-			m_LocalBuffers[i * 4 + 1] = 0; //g
-			m_LocalBuffers[i * 4 + 3] = 255; //a
-		}
-
 		for (size_t i = 0; i < m_Width * m_Height * m_Amount * 4; i++)
 			m_LocalBuffers[i + m_Width * m_Height * 4] = data[i];
 		
