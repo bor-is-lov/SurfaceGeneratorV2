@@ -75,6 +75,9 @@
     <ClCompile Include="src\OpenGL\TextureArrayStb.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\Chunk\ChunkGenerator.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\shader.vert" />

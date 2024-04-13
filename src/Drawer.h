@@ -11,7 +11,7 @@
 
 #include "Chunk/ChunkManager.h"
 
-struct ChunkPos;
+struct ChunkInfo;
 
 class Drawer
 {
@@ -28,15 +28,16 @@ class Drawer
 		INDECES_AMOUNT = 6  * CHUNKS_AMOUNT;
 	float m_Buffer[BUFFER_AMOUNT];
 	unsigned int* m_Indeces;
-	ChunkPos* m_ChunksPos;
+	ChunkInfo* m_ChunksInfo;
 	long long m_ChunksCenter[2];
+	ChunkManager m_Manager;
 
 	OGL::VertexArray m_va;
 	OGL::VertexBuffer* m_vb;
 	OGL::BufferLayout m_Layout;
 	OGL::IndexBuffer* m_ib;
 	OGL::Shader m_Shader;
-	OGL::TextureArray* m_Textures;
+	OGL::TextureArray m_Textures;
 	glm::mat4 m_Projection;
 	OGL::Renderer m_Renderer;
 public:

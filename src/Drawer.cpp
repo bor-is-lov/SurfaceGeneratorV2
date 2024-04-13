@@ -1,66 +1,68 @@
 #include "Drawer.h"
 #include <iostream>
 
-struct ChunkPos
+struct ChunkInfo
 {
 	long long x, y;
-	ChunkPos() : x(0), y(0) {};
-	ChunkPos(long long x, long long y) : x(x), y(y) {};
+	unsigned int textureID;
+	ChunkInfo() : x(0), y(0), textureID(0) {};
+	ChunkInfo(long long x, long long y) : x(x), y(y), textureID(0) {};
 };
 
 Drawer::Drawer(GLFWwindow* window)
 	: m_Window(window),
 	m_io(ImGui::GetIO()),
-	m_DrawGUI(true),
-	m_Zoom(4.0f),
+	m_DrawGUI(false),
+	m_Zoom(64.0f),
 	m_WindowMax(0),
 	m_ViewPos{0.0f, 0.0f},
 	m_Boost{0.0f, 0.0f},
 	
 	m_Indeces(nullptr),
-	m_ChunksPos(nullptr),
+	m_ChunksInfo(nullptr),
 	m_ChunksCenter{0, 0},
 
 	m_va(),
 	m_Layout(),
 	m_Shader("res/shaders/shader.vert", "res/shaders/shader.frag"),
+	m_Textures(nullptr, 0, 4096, 16, 16),
 	m_Projection(glm::ortho(-1.0f / 9 * 16, 1.0f / 9 * 16, -1.0f, 1.0f, -1.0f, 1.0f)),
 	m_Renderer()
 {
-	m_ChunksPos = new ChunkPos[CHUNKS_AMOUNT];
+	m_ChunksInfo = new ChunkInfo[CHUNKS_AMOUNT];
 	m_Indeces = new unsigned int[INDECES_AMOUNT];
 	
 	{
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 		{
-			m_ChunksPos[i].x = (int)i % width - width / 2;
-			m_ChunksPos[i].y = (int)i / width - width / 2;
+			m_ChunksInfo[i].x = (int)i % width - width / 2;
+			m_ChunksInfo[i].y = (int)i / width - width / 2;
 		}
 	}
 
 	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 	{
-		m_Buffer[i * 20]	  =  m_ChunksPos[i].x;
-		m_Buffer[i * 20 + 1]  =  m_ChunksPos[i].y;
-		m_Buffer[i * 20 + 2]  =  0.0f;
-		m_Buffer[i * 20 + 3]  =  0.0f;
-		m_Buffer[i * 20 + 4]  =  0;
-		m_Buffer[i * 20 + 5]  =  m_ChunksPos[i].x + 1.0f;
-		m_Buffer[i * 20 + 6]  =  m_ChunksPos[i].y;
-		m_Buffer[i * 20 + 7]  =  1.0f;
-		m_Buffer[i * 20 + 8]  =  0.0f;
-		m_Buffer[i * 20 + 9]  =  0;
-		m_Buffer[i * 20 + 10] =  m_ChunksPos[i].x + 1.0f;
-		m_Buffer[i * 20 + 11] =  m_ChunksPos[i].y + 1.0f;
-		m_Buffer[i * 20 + 12] =  1.0f;
-		m_Buffer[i * 20 + 13] =  1.0f;
-		m_Buffer[i * 20 + 14] =  0;
-		m_Buffer[i * 20 + 15] =  m_ChunksPos[i].x;
-		m_Buffer[i * 20 + 16] =  m_ChunksPos[i].y + 1.0f;
-		m_Buffer[i * 20 + 17] =  0.0f;
-		m_Buffer[i * 20 + 18] =  1.0f;
-		m_Buffer[i * 20 + 19] =  0;
+		m_Buffer[i * 20]	  = m_ChunksInfo[i].x;
+		m_Buffer[i * 20 + 1]  = m_ChunksInfo[i].y;
+		m_Buffer[i * 20 + 2]  = 0.0f;
+		m_Buffer[i * 20 + 3]  = 0.0f;
+		m_Buffer[i * 20 + 4]  = m_ChunksInfo[i].textureID = i;
+		m_Buffer[i * 20 + 5]  = m_ChunksInfo[i].x + 1.0f;
+		m_Buffer[i * 20 + 6]  = m_ChunksInfo[i].y;
+		m_Buffer[i * 20 + 7]  = 1.0f;
+		m_Buffer[i * 20 + 8]  = 0.0f;
+		m_Buffer[i * 20 + 9]  = m_ChunksInfo[i].textureID = i;
+		m_Buffer[i * 20 + 10] = m_ChunksInfo[i].x + 1.0f;
+		m_Buffer[i * 20 + 11] = m_ChunksInfo[i].y + 1.0f;
+		m_Buffer[i * 20 + 12] = 1.0f;
+		m_Buffer[i * 20 + 13] = 1.0f;
+		m_Buffer[i * 20 + 14] = m_ChunksInfo[i].textureID = i;
+		m_Buffer[i * 20 + 15] = m_ChunksInfo[i].x;
+		m_Buffer[i * 20 + 16] = m_ChunksInfo[i].y + 1.0f;
+		m_Buffer[i * 20 + 17] = 0.0f;
+		m_Buffer[i * 20 + 18] = 1.0f;
+		m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID = i;
 
 		m_Indeces[i * 6]	 = i * 4;
 		m_Indeces[i * 6 + 1] = i * 4 + 1;
@@ -78,16 +80,21 @@ Drawer::Drawer(GLFWwindow* window)
 	m_Layout.Push<float>(1, 0);
 	m_va.AddBuffer(*m_vb, m_Layout);
 
-	m_Textures = new OGL::TextureArray(nullptr, 0, 16, 16);
-	m_Textures->Bind();
+	m_Textures.Bind();
+	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+	{
+		unsigned char texture[16 * 16 * 4];
+		Chunk chunk(m_ChunksInfo[i].x, m_ChunksInfo[i].y);
+		m_Manager.ChunkToTexTest(chunk, texture);
+		m_Textures.SubImage(texture, i);
+	}
 }
 Drawer::~Drawer()
 {
-	delete[] m_ChunksPos;
+	delete[] m_ChunksInfo;
 	delete[] m_Indeces;
 	delete m_vb;
 	delete m_ib;
-	delete m_Textures;
 }
 void Drawer::OnUpdate(float deltaTime)
 {
@@ -116,26 +123,26 @@ void Drawer::OnUpdate(float deltaTime)
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 		{
-			if (m_ChunksPos[i].x < -width / 2 - (int)m_ViewPos[0])
-				m_ChunksPos[i].x += width;
-			if (m_ChunksPos[i].x > width / 2 - (int)m_ViewPos[0])
-				m_ChunksPos[i].x -= width;
-			if (m_ChunksPos[i].y < -width / 2 - (int)m_ViewPos[1])
-				m_ChunksPos[i].y += width;
-			if (m_ChunksPos[i].y > width / 2 - (int)m_ViewPos[1])
-				m_ChunksPos[i].y -= width;
+			if (m_ChunksInfo[i].x < -width / 2 - (int)m_ViewPos[0])
+				m_ChunksInfo[i].x += width;
+			if (m_ChunksInfo[i].x > width / 2 - (int)m_ViewPos[0])
+				m_ChunksInfo[i].x -= width;
+			if (m_ChunksInfo[i].y < -width / 2 - (int)m_ViewPos[1])
+				m_ChunksInfo[i].y += width;
+			if (m_ChunksInfo[i].y > width / 2 - (int)m_ViewPos[1])
+				m_ChunksInfo[i].y -= width;
 		}
 
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 		{
-			m_Buffer[i * 20]	  =  m_ChunksPos[i].x;
-			m_Buffer[i * 20 + 1]  =  m_ChunksPos[i].y;
-			m_Buffer[i * 20 + 5]  =  m_ChunksPos[i].x + 1.0f;
-			m_Buffer[i * 20 + 6]  =  m_ChunksPos[i].y;
-			m_Buffer[i * 20 + 10] =  m_ChunksPos[i].x + 1.0f;
-			m_Buffer[i * 20 + 11] =  m_ChunksPos[i].y + 1.0f;
-			m_Buffer[i * 20 + 15] =  m_ChunksPos[i].x;
-			m_Buffer[i * 20 + 16] =  m_ChunksPos[i].y + 1.0f;
+			m_Buffer[i * 20]	  =  m_ChunksInfo[i].x;
+			m_Buffer[i * 20 + 1]  =  m_ChunksInfo[i].y;
+			m_Buffer[i * 20 + 5]  =  m_ChunksInfo[i].x + 1.0f;
+			m_Buffer[i * 20 + 6]  =  m_ChunksInfo[i].y;
+			m_Buffer[i * 20 + 10] =  m_ChunksInfo[i].x + 1.0f;
+			m_Buffer[i * 20 + 11] =  m_ChunksInfo[i].y + 1.0f;
+			m_Buffer[i * 20 + 15] =  m_ChunksInfo[i].x;
+			m_Buffer[i * 20 + 16] =  m_ChunksInfo[i].y + 1.0f;
 		}
 		m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 
@@ -285,8 +292,8 @@ void Drawer::OnGuiRender()
 			const int width = (int)sqrt(CHUNKS_AMOUNT);
 			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 			{
-				m_ChunksPos[i].x = (int)i % width - width / 2 - (int)m_ViewPos[0];
-				m_ChunksPos[i].y = (int)i / width - width / 2 - (int)m_ViewPos[1];
+				m_ChunksInfo[i].x = (int)i % width - width / 2 - (int)m_ViewPos[0];
+				m_ChunksInfo[i].y = (int)i / width - width / 2 - (int)m_ViewPos[1];
 			}
 		}
 		ImGui::SameLine();

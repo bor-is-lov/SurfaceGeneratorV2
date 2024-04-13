@@ -9,5 +9,8 @@ out vec4 F_Color;
 void main()
 {
 	int index = int(v_textureID);
-	F_Color = texture(u_Textures, vec3(v_TexCoord, index));
+	if (index % 2 == 0)
+		F_Color = texture(u_Textures, vec3(v_TexCoord.x, v_TexCoord.y / 2, index / 2));
+	else
+		F_Color = texture(u_Textures, vec3(v_TexCoord.x, v_TexCoord.y / 2 + 0.5f, index / 2));
 }

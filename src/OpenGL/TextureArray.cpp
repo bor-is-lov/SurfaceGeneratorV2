@@ -2,14 +2,17 @@
 
 namespace OGL
 {
-	TextureArray::TextureArray(unsigned char* data, const unsigned int amount, const unsigned int width, const unsigned int height)
-		: m_RendererID(0), m_LocalBuffers(nullptr), m_Width(width), m_Height(height), m_Amount(amount)
+	TextureArray::TextureArray(unsigned char* data, const unsigned int amount, const unsigned int reserve, const unsigned int width, const unsigned int height)
+		: m_RendererID(0), m_LocalBuffers(nullptr), m_Width(width), m_Height(height), m_Amount(amount), m_Reserved(reserve)
 	{
-		m_LocalBuffers = new unsigned char[m_Width * m_Height * (m_Amount + 1) * 4];
+		if (reserve <= amount)
+			ASSERT(false);
 
-		for (size_t i = 0; i < (size_t)m_Width * m_Height; i++)
+		m_LocalBuffers = new unsigned char[m_Width * m_Height * m_Reserved * 4];
+
+		for (size_t i = 0; i < m_Width * m_Height; i++)
 		{
-			if (i % m_Width < (size_t)m_Width / 2 && i < (size_t)m_Width * m_Height / 2 || i % m_Width >= (size_t)m_Width / 2 && i > (size_t)m_Width * m_Height / 2)
+			if (i % m_Width < m_Width / 2 && i < m_Width * m_Height / 2 || i % m_Width >= m_Width / 2 && i > m_Width * m_Height / 2)
 			{
 				m_LocalBuffers[i * 4]	  = 0; //r
 				m_LocalBuffers[i * 4 + 2] = 0; //b
@@ -29,10 +32,8 @@ namespace OGL
 		GlCall(glGenTextures(1, &m_RendererID));
 		GlCall(glBindTexture(GL_TEXTURE_2D_ARRAY, m_RendererID));
 
-		//GlCall(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, m_Width, m_Height, m_Amount + 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffers));
-
-		GlCall(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, m_Width, m_Height, m_Amount + 1));
-		GlCall(glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, m_Width, m_Height, m_Amount + 1, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffers));
+		GlCall(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, m_Width, m_Height * 2, ceil(m_Reserved / 2.0)));
+		GlCall(glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, m_Width, m_Height * 2, ceil(m_Reserved / 2.0), GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffers));
 
 		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST)); // want it to be sharp
@@ -40,7 +41,6 @@ namespace OGL
 		GlCall(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
 		GlCall(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
-
 	}
 
 	TextureArray::~TextureArray()
@@ -58,5 +58,20 @@ namespace OGL
 	void TextureArray::Unbind()
 	{
 		GlCall(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
+	}
+
+	void TextureArray::SubImage(unsigned char* data, int layerOffset)
+	{
+		Bind();
+		for (size_t i = 0; i < m_Height * m_Width * 4; i++)
+			m_LocalBuffers[i + m_Height * m_Width * 4 * layerOffset] = data[i];
+		if (layerOffset % 2 == 0)
+		{
+			GlCall(glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layerOffset / 2, m_Width, m_Height, 1, GL_RGBA, GL_UNSIGNED_BYTE, &m_LocalBuffers[m_Height * m_Width * 4 * layerOffset]));
+		}
+		else
+		{
+			GlCall(glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, m_Height, layerOffset / 2, m_Width, m_Height, 1, GL_RGBA, GL_UNSIGNED_BYTE, &m_LocalBuffers[m_Height * m_Width * 4 * layerOffset]));
+		}
 	}
 }
