@@ -31,6 +31,7 @@ class Drawer
 	ChunkInfo* m_ChunksInfo;
 	long long m_ChunksCenter[2];
 	unsigned int m_RenderDistance;
+	bool m_MaxRender;
 	ChunkManager m_Manager;
 
 	OGL::VertexArray m_va;
@@ -48,4 +49,7 @@ public:
 	void OnUpdate(float deltaTime);
 	void OnRender();
 	void OnGuiRender();
+
+private:
+	void UpdateTextureIDsRenderDistance();
 };

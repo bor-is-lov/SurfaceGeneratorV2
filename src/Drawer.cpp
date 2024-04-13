@@ -22,6 +22,7 @@ Drawer::Drawer(GLFWwindow* window)
 	m_ChunksInfo(nullptr),
 	m_ChunksCenter{0, 0},
 	m_RenderDistance(16),
+	m_MaxRender(false),
 	m_Manager(),
 
 	m_va(),
@@ -62,19 +63,6 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Buffer[i * 20 + 17] = 0.0f;
 		m_Buffer[i * 20 + 18] = 1.0f;
 
-		if(m_ChunksInfo[i].x * m_ChunksInfo[i].x + m_ChunksInfo[i].y * m_ChunksInfo[i].y <= m_RenderDistance*m_RenderDistance)
-			m_Buffer[i * 20 + 4] =
-			m_Buffer[i * 20 + 9] =
-			m_Buffer[i * 20 + 14] =
-			m_Buffer[i * 20 + 19] =
-			m_ChunksInfo[i].textureID = i;
-		else
-			m_Buffer[i * 20 + 4] =
-			m_Buffer[i * 20 + 9] =
-			m_Buffer[i * 20 + 14] =
-			m_Buffer[i * 20 + 19] =
-			m_ChunksInfo[i].textureID = -1;
-
 		m_Indeces[i * 6]	 = i * 4;
 		m_Indeces[i * 6 + 1] = i * 4 + 1;
 		m_Indeces[i * 6 + 2] = i * 4 + 2;
@@ -82,6 +70,7 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Indeces[i * 6 + 4] = i * 4 + 2;
 		m_Indeces[i * 6 + 5] = i * 4 + 3;
 	}
+	UpdateTextureIDsRenderDistance();
 
 	m_vb = new OGL::VertexBuffer(m_Buffer, sizeof(m_Buffer));
 	m_ib = new OGL::IndexBuffer(m_Indeces, INDECES_AMOUNT);
@@ -138,21 +127,11 @@ void Drawer::OnUpdate(float deltaTime)
 		m_ChunksCenter[0] = (int)m_ViewPos[0];
 		m_ChunksCenter[1] = (int)m_ViewPos[1];
 
+		UpdateTextureIDsRenderDistance();
+
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 		{
-			if((m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance*m_RenderDistance)
-				m_Buffer[i * 20 + 4] =
-				m_Buffer[i * 20 + 9] =
-				m_Buffer[i * 20 + 14] =
-				m_Buffer[i * 20 + 19] =
-				m_ChunksInfo[i].textureID = i;
-			else
-				m_Buffer[i * 20 + 4] =
-				m_Buffer[i * 20 + 9] =
-				m_Buffer[i * 20 + 14] =
-				m_Buffer[i * 20 + 19] =
-				m_ChunksInfo[i].textureID = -1;
 
 			if (m_ChunksInfo[i].x < -width / 2 - (int)m_ViewPos[0])
 				m_ChunksInfo[i].x += width;
@@ -330,21 +309,13 @@ void Drawer::OnGuiRender()
 
 		if (ImGui::SliderInt("Render distance", (int*)&m_RenderDistance, 0, 32))
 		{
-			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
-			{
-				if ((m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance * m_RenderDistance)
-					m_Buffer[i * 20 + 4] =
-					m_Buffer[i * 20 + 9] =
-					m_Buffer[i * 20 + 14] =
-					m_Buffer[i * 20 + 19] =
-					m_ChunksInfo[i].textureID = i;
-				else
-					m_Buffer[i * 20 + 4] =
-					m_Buffer[i * 20 + 9] =
-					m_Buffer[i * 20 + 14] =
-					m_Buffer[i * 20 + 19] =
-					m_ChunksInfo[i].textureID = -1;
-			}
+			UpdateTextureIDsRenderDistance();
+			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
+		}
+
+		if (ImGui::Checkbox("Maximum render distance", &m_MaxRender))
+		{
+			UpdateTextureIDsRenderDistance();
 			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 		}
 
@@ -352,5 +323,24 @@ void Drawer::OnGuiRender()
 
 		ImGui::Text("%.1f FPS", m_io.Framerate);
 		ImGui::End();
+	}
+}
+
+void Drawer::UpdateTextureIDsRenderDistance()
+{
+	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+	{
+		if (m_MaxRender || (m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance * m_RenderDistance)
+			m_Buffer[i * 20 + 4] =
+			m_Buffer[i * 20 + 9] =
+			m_Buffer[i * 20 + 14] =
+			m_Buffer[i * 20 + 19] =
+			m_ChunksInfo[i].textureID = i;
+		else
+			m_Buffer[i * 20 + 4] =
+			m_Buffer[i * 20 + 9] =
+			m_Buffer[i * 20 + 14] =
+			m_Buffer[i * 20 + 19] =
+			m_ChunksInfo[i].textureID = -1;
 	}
 }
