@@ -12,8 +12,8 @@ struct ChunkInfo
 Drawer::Drawer(GLFWwindow* window)
 	: m_Window(window),
 	m_io(ImGui::GetIO()),
-	m_DrawGUI(true),
-	m_Zoom(30.0f),
+	m_DrawGUI(false),
+	m_Zoom(64.0f),
 	m_WindowMax(0),
 	m_ViewPos{0.0f, 0.0f},
 	m_Boost{0.0f, 0.0f},
@@ -22,7 +22,7 @@ Drawer::Drawer(GLFWwindow* window)
 	m_ChunksInfo(nullptr),
 	m_ChunksCenter{0, 0},
 	m_RenderDistance(16),
-	m_MaxRender(false),
+	m_MaxRender(true),
 	m_Manager(),
 
 	m_va(),
@@ -50,18 +50,22 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Buffer[i * 20 + 1]  = m_ChunksInfo[i].y;
 		m_Buffer[i * 20 + 2]  = 0.0f;
 		m_Buffer[i * 20 + 3]  = 0.0f;
+		m_Buffer[i * 20 + 4] = m_ChunksInfo[i].textureID = -1;
 		m_Buffer[i * 20 + 5]  = m_ChunksInfo[i].x + 1.0f;
 		m_Buffer[i * 20 + 6]  = m_ChunksInfo[i].y;
 		m_Buffer[i * 20 + 7]  = 1.0f;
 		m_Buffer[i * 20 + 8]  = 0.0f;
+		m_Buffer[i * 20 + 9] = m_ChunksInfo[i].textureID = -1;
 		m_Buffer[i * 20 + 10] = m_ChunksInfo[i].x + 1.0f;
 		m_Buffer[i * 20 + 11] = m_ChunksInfo[i].y + 1.0f;
 		m_Buffer[i * 20 + 12] = 1.0f;
 		m_Buffer[i * 20 + 13] = 1.0f;
+		m_Buffer[i * 20 + 14] = m_ChunksInfo[i].textureID = -1;
 		m_Buffer[i * 20 + 15] = m_ChunksInfo[i].x;
 		m_Buffer[i * 20 + 16] = m_ChunksInfo[i].y + 1.0f;
 		m_Buffer[i * 20 + 17] = 0.0f;
 		m_Buffer[i * 20 + 18] = 1.0f;
+		m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID = -1;
 
 		m_Indeces[i * 6]	 = i * 4;
 		m_Indeces[i * 6 + 1] = i * 4 + 1;
@@ -70,7 +74,7 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Indeces[i * 6 + 4] = i * 4 + 2;
 		m_Indeces[i * 6 + 5] = i * 4 + 3;
 	}
-	UpdateTextureIDsRenderDistance();
+	UpdateTextureIDs();
 
 	m_vb = new OGL::VertexBuffer(m_Buffer, sizeof(m_Buffer));
 	m_ib = new OGL::IndexBuffer(m_Indeces, INDECES_AMOUNT);
@@ -81,13 +85,6 @@ Drawer::Drawer(GLFWwindow* window)
 	m_va.AddBuffer(*m_vb, m_Layout);
 
 	m_Textures.Bind();
-	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
-	{
-		unsigned char texture[16 * 16 * 4];
-		Chunk chunk(m_ChunksInfo[i].x, m_ChunksInfo[i].y);
-		m_Manager.ChunkToTexTest(chunk, texture);
-		m_Textures.SubImage(texture, i);
-	}
 }
 
 Drawer::~Drawer()
@@ -127,20 +124,36 @@ void Drawer::OnUpdate(float deltaTime)
 		m_ChunksCenter[0] = (int)m_ViewPos[0];
 		m_ChunksCenter[1] = (int)m_ViewPos[1];
 
-		UpdateTextureIDsRenderDistance();
-
 		const int width = (int)sqrt(CHUNKS_AMOUNT);
 		for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 		{
-
+			bool updateTexture = false;
 			if (m_ChunksInfo[i].x < -width / 2 - (int)m_ViewPos[0])
+			{
 				m_ChunksInfo[i].x += width;
+				updateTexture = true;
+			}
 			if (m_ChunksInfo[i].x > width / 2 - (int)m_ViewPos[0])
+			{
 				m_ChunksInfo[i].x -= width;
+				updateTexture = true;
+			}
 			if (m_ChunksInfo[i].y < -width / 2 - (int)m_ViewPos[1])
+			{
 				m_ChunksInfo[i].y += width;
+				updateTexture = true;
+			}
 			if (m_ChunksInfo[i].y > width / 2 - (int)m_ViewPos[1])
+			{
 				m_ChunksInfo[i].y -= width;
+				updateTexture = true;
+			}
+			if(updateTexture)
+				m_Buffer[i * 20 + 4] =
+				m_Buffer[i * 20 + 9] =
+				m_Buffer[i * 20 + 14] =
+				m_Buffer[i * 20 + 19] =
+				m_ChunksInfo[i].textureID = -1;
 
 			m_Buffer[i * 20]	  =  m_ChunksInfo[i].x;
 			m_Buffer[i * 20 + 1]  =  m_ChunksInfo[i].y;
@@ -151,6 +164,7 @@ void Drawer::OnUpdate(float deltaTime)
 			m_Buffer[i * 20 + 15] =  m_ChunksInfo[i].x;
 			m_Buffer[i * 20 + 16] =  m_ChunksInfo[i].y + 1.0f;
 		}
+		UpdateTextureIDs();
 		m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 	}
 
@@ -277,7 +291,7 @@ void Drawer::OnGuiRender()
 
 				ImGui::TreePop();
 			}
-			ImGui::SeparatorText(""); // thicker than ImGui::Separator()
+			ImGui::Separator();
 		}
 
 		char x[10], y[10];
@@ -309,13 +323,13 @@ void Drawer::OnGuiRender()
 
 		if (ImGui::SliderInt("Render distance", (int*)&m_RenderDistance, 0, 32))
 		{
-			UpdateTextureIDsRenderDistance();
+			UpdateTextureIDs();
 			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 		}
 
 		if (ImGui::Checkbox("Maximum render distance", &m_MaxRender))
 		{
-			UpdateTextureIDsRenderDistance();
+			UpdateTextureIDs();
 			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 		}
 
@@ -326,21 +340,32 @@ void Drawer::OnGuiRender()
 	}
 }
 
-void Drawer::UpdateTextureIDsRenderDistance()
+void Drawer::UpdateTextureIDs()
 {
 	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 	{
-		if (m_MaxRender || (m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance * m_RenderDistance)
+		bool updateTexture = (m_ChunksInfo[i].textureID == -1);
+		if (m_MaxRender || (m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance * m_RenderDistance + 1)
 			m_Buffer[i * 20 + 4] =
 			m_Buffer[i * 20 + 9] =
 			m_Buffer[i * 20 + 14] =
 			m_Buffer[i * 20 + 19] =
 			m_ChunksInfo[i].textureID = i;
 		else
+		{
 			m_Buffer[i * 20 + 4] =
 			m_Buffer[i * 20 + 9] =
 			m_Buffer[i * 20 + 14] =
 			m_Buffer[i * 20 + 19] =
 			m_ChunksInfo[i].textureID = -1;
+			updateTexture = false;
+		}
+		if (updateTexture)
+		{
+			unsigned char texture[16 * 16 * 4];
+			Chunk chunk(m_ChunksInfo[i].x, m_ChunksInfo[i].y);
+			m_Manager.ChunkToTexTest(chunk, texture);
+			m_Textures.SubImage(texture, i);
+		}
 	}
 }

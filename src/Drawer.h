@@ -51,5 +51,5 @@ public:
 	void OnGuiRender();
 
 private:
-	void UpdateTextureIDsRenderDistance();
+	void UpdateTextureIDs();
 };
