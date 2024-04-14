@@ -10,7 +10,7 @@ public:
 	ChunkGenerator();
 	ChunkGenerator(unsigned int seed);
 
-	void SrcMap(Chunk& chunk);
+	void GenSrc(Chunk& chunk);
 	// amount of src chunks has to be exactly (ceil(radius / 16.0) * 2 + 1) ^ 2
 	bool Gen(unsigned int radius, const Chunk* src[], Chunk& chunk);
 };

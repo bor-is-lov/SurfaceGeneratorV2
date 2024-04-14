@@ -118,7 +118,6 @@ void Drawer::OnUpdate(float deltaTime)
 	}
 
 	// update chunks
-	// TODO: update chunks textures if their coords updated
 	if ((int)m_ViewPos[0] - m_ChunksCenter[0] != 0 || (int)m_ViewPos[1] - m_ChunksCenter[1] != 0)
 	{
 		m_ChunksCenter[0] = (int)m_ViewPos[0];
@@ -316,6 +315,7 @@ void Drawer::OnGuiRender()
 			{
 				m_ChunksInfo[i].x = (int)i % width - width / 2 - (int)m_ViewPos[0];
 				m_ChunksInfo[i].y = (int)i / width - width / 2 - (int)m_ViewPos[1];
+				m_ChunksInfo[i].textureID = -1;
 			}
 		}
 		ImGui::SameLine();
@@ -364,7 +364,7 @@ void Drawer::UpdateTextureIDs()
 		{
 			unsigned char texture[16 * 16 * 4];
 			Chunk chunk(m_ChunksInfo[i].x, m_ChunksInfo[i].y);
-			m_Manager.ChunkToTexTest(chunk, texture);
+			m_Manager.GenTextureTest(chunk, texture);
 			m_Textures.SubImage(texture, i);
 		}
 	}
