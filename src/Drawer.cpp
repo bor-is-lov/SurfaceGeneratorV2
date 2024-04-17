@@ -3,10 +3,10 @@
 
 struct ChunkInfo
 {
-	long long x, y;
+	int x, y;
 	unsigned int textureID;
 	ChunkInfo() : x(0), y(0), textureID(0) {}; // -1 is no texture (solid black)
-	ChunkInfo(long long x, long long y) : x(x), y(y), textureID(0) {};
+	ChunkInfo(int x, int y) : x(x), y(y), textureID(0) {};
 };
 
 Drawer::Drawer(GLFWwindow* window)
@@ -55,17 +55,17 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Buffer[i * 20 + 6]  = m_ChunksInfo[i].y;
 		m_Buffer[i * 20 + 7]  = 1.0f;
 		m_Buffer[i * 20 + 8]  = 0.0f;
-		m_Buffer[i * 20 + 9] = m_ChunksInfo[i].textureID = -1;
+		m_Buffer[i * 20 + 9] = m_ChunksInfo[i].textureID;
 		m_Buffer[i * 20 + 10] = m_ChunksInfo[i].x + 1.0f;
 		m_Buffer[i * 20 + 11] = m_ChunksInfo[i].y + 1.0f;
 		m_Buffer[i * 20 + 12] = 1.0f;
 		m_Buffer[i * 20 + 13] = 1.0f;
-		m_Buffer[i * 20 + 14] = m_ChunksInfo[i].textureID = -1;
+		m_Buffer[i * 20 + 14] = m_ChunksInfo[i].textureID;
 		m_Buffer[i * 20 + 15] = m_ChunksInfo[i].x;
 		m_Buffer[i * 20 + 16] = m_ChunksInfo[i].y + 1.0f;
 		m_Buffer[i * 20 + 17] = 0.0f;
 		m_Buffer[i * 20 + 18] = 1.0f;
-		m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID = -1;
+		m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID;
 
 		m_Indeces[i * 6]	 = i * 4;
 		m_Indeces[i * 6 + 1] = i * 4 + 1;
@@ -148,10 +148,6 @@ void Drawer::OnUpdate(float deltaTime)
 				updateTexture = true;
 			}
 			if(updateTexture)
-				m_Buffer[i * 20 + 4] =
-				m_Buffer[i * 20 + 9] =
-				m_Buffer[i * 20 + 14] =
-				m_Buffer[i * 20 + 19] =
 				m_ChunksInfo[i].textureID = -1;
 
 			m_Buffer[i * 20]	  =  m_ChunksInfo[i].x;
@@ -321,7 +317,7 @@ void Drawer::OnGuiRender()
 		ImGui::SameLine();
 		ImGui::InputInt2(" ", tp);
 
-		if (ImGui::SliderInt("Render distance", (int*)&m_RenderDistance, 0, 32))
+		if (ImGui::SliderInt("Render distance", (int*)&m_RenderDistance, 0, 48))
 		{
 			UpdateTextureIDs();
 			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
@@ -345,7 +341,7 @@ void Drawer::UpdateTextureIDs()
 	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 	{
 		bool updateTexture = (m_ChunksInfo[i].textureID == -1);
-		if (m_MaxRender || (m_ChunksInfo[i].x + m_ChunksCenter[0]) * (m_ChunksInfo[i].x + m_ChunksCenter[0]) + (m_ChunksInfo[i].y + m_ChunksCenter[1]) * (m_ChunksInfo[i].y + m_ChunksCenter[1]) <= m_RenderDistance * m_RenderDistance + 1)
+		if (m_MaxRender || (m_ChunksInfo[i].x + m_ViewPos[0]) * (m_ChunksInfo[i].x + m_ViewPos[0]) + (m_ChunksInfo[i].y + m_ViewPos[1]) * (m_ChunksInfo[i].y + m_ViewPos[1]) <= m_RenderDistance * m_RenderDistance)
 			m_Buffer[i * 20 + 4] =
 			m_Buffer[i * 20 + 9] =
 			m_Buffer[i * 20 + 14] =
