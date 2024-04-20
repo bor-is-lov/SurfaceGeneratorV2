@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Chunk\ChunkGenerator.cpp" />
+    <ClCompile Include="src\Chunk\ChunkLoader.cpp" />
     <ClCompile Include="src\Chunk\ChunkManager.cpp" />
     <ClCompile Include="src\Drawer.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -322,6 +323,7 @@
   <ItemGroup>
     <ClInclude Include="src\Chunk\Chunk.h" />
     <ClInclude Include="src\Chunk\ChunkGenerator.h" />
+    <ClInclude Include="src\Chunk\ChunkLoader.h" />
     <ClInclude Include="src\Chunk\ChunkManager.h" />
     <ClInclude Include="src\Drawer.h" />
     <ClInclude Include="src\OpenGL\TextureArrayStb.h" />

@@ -1,9 +1,11 @@
 #pragma once
 #include "ChunkGenerator.h"
+#include "ChunkLoader.h"
 
 class ChunkManager
 {
 	ChunkGenerator m_Generator;
+	ChunkLoader m_Loader;
 public:
 	ChunkManager() {}
 	ChunkManager(unsigned int seed) : m_Generator(seed) {}
