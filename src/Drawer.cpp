@@ -50,12 +50,12 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Buffer[i * 20 + 1]  = m_ChunksInfo[i].y;
 		m_Buffer[i * 20 + 2]  = 0.0f;
 		m_Buffer[i * 20 + 3]  = 0.0f;
-		m_Buffer[i * 20 + 4] = m_ChunksInfo[i].textureID = -1;
+		m_Buffer[i * 20 + 4]  = m_ChunksInfo[i].textureID = -1;
 		m_Buffer[i * 20 + 5]  = m_ChunksInfo[i].x + 1.0f;
 		m_Buffer[i * 20 + 6]  = m_ChunksInfo[i].y;
 		m_Buffer[i * 20 + 7]  = 1.0f;
 		m_Buffer[i * 20 + 8]  = 0.0f;
-		m_Buffer[i * 20 + 9] = m_ChunksInfo[i].textureID;
+		m_Buffer[i * 20 + 9]  = m_ChunksInfo[i].textureID;
 		m_Buffer[i * 20 + 10] = m_ChunksInfo[i].x + 1.0f;
 		m_Buffer[i * 20 + 11] = m_ChunksInfo[i].y + 1.0f;
 		m_Buffer[i * 20 + 12] = 1.0f;
@@ -97,7 +97,7 @@ Drawer::~Drawer()
 
 void Drawer::OnUpdate(float deltaTime)
 {
-	// Zoom & window_min set for mouse dragging
+	// Zoom & WindowMax set needed for mouse dragging
 	{
 		int width, height;
 		glfwGetFramebufferSize(m_Window, &width, &height);

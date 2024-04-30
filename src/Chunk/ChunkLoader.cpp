@@ -4,34 +4,36 @@
 
 static const char* SAVESPATH = "saves/";
 
-bool ChunkLoader::LoadSrc(Chunk& chunk, unsigned int seed)
+bool ChunkLoader::Load(Chunk& chunk, unsigned int seed)
 {
-	fin.open(SAVESPATH + std::to_string(seed) + "/src_" + std::to_string(chunk.x) + "_" + std::to_string(chunk.y) + ".txt");
+	fin.open(SAVESPATH + std::to_string(seed) + "/" + std::to_string(chunk.x) + "_" + std::to_string(chunk.y) + ".txt");
 	if(!fin.is_open())
 	    return false;
 
-	std::string num;
-	int i = 0;
-	while (!fin.eof())
 	{
-		char a = fin.get();
-		if (a == '\t' || a == '\n')
+		std::string num;
+		int i = 0;
+		while (!fin.eof())
 		{
-			chunk.height[i] = atoi(num.c_str());
-			i++;
-			num.clear();
+			char a = fin.get();
+			if (a == '\t' || a == '\n')
+			{
+				chunk.height[i] = atoi(num.c_str());
+				i++;
+				num.clear();
+			}
+			else
+				num += a;
 		}
-		else
-			num += a;
 	}
 
 	fin.close();
 	return true;
 }
 
-void ChunkLoader::SaveSrc(const Chunk& chunk, unsigned int seed)
+void ChunkLoader::Save(const Chunk& chunk, unsigned int seed)
 {
-	std::string path(SAVESPATH + std::to_string(seed) + "/src_" + std::to_string(chunk.x) + "_" + std::to_string(chunk.y) + ".txt");
+	std::string path(SAVESPATH + std::to_string(seed) + "/" + std::to_string(chunk.x) + "_" + std::to_string(chunk.y) + ".txt");
 	fout.open(path);
 	if (!fout.is_open())
 	{
