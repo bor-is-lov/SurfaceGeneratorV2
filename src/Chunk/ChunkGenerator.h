@@ -14,9 +14,10 @@ public:
 	ChunkGenerator();
 	ChunkGenerator(unsigned int seed);
 
+	inline unsigned int GetSeed() { return m_Seed; }
+
 	void GenSrc(Chunk& chunk);
-	// amount of src chunks has to be exactly (ceil(radius / 16.0) * 2 + 1) ^ 2
-	bool Gen(unsigned int radius, const Chunk* src[], Chunk& chunk);
+	void Gen(unsigned int radius, Chunk& chunk);
 
 	inline unsigned int seed() { return m_Seed; }
 };

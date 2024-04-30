@@ -12,8 +12,8 @@ struct ChunkInfo
 Drawer::Drawer(GLFWwindow* window)
 	: m_Window(window),
 	m_io(ImGui::GetIO()),
-	m_DrawGUI(false),
-	m_Zoom(64.0f),
+	m_DrawGUI(true),
+	m_Zoom(4.0f),
 	m_WindowMax(0),
 	m_ViewPos{0.0f, 0.0f},
 	m_Boost{0.0f, 0.0f},
@@ -22,7 +22,7 @@ Drawer::Drawer(GLFWwindow* window)
 	m_ChunksInfo(nullptr),
 	m_ChunksCenter{0, 0},
 	m_RenderDistance(16),
-	m_MaxRender(true),
+	m_MaxRender(false),
 	m_Manager(),
 
 	m_va(),
@@ -270,10 +270,9 @@ void Drawer::OnGuiRender()
 			}
 			if (ImGui::TreeNode("Links"))
 			{
-				char Chernos[]	= "https://www.youtube.com/playlist?list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2",
-					glm[]		= "https://github.com/g-truc/glm",
-					ImGui[]		= "https://github.com/ocornut/imgui",
-					stb_image[]	= "https://github.com/nothings/stb/blob/master/stb_image.h";
+				char Chernos[] = "https://www.youtube.com/playlist?list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2",
+					glm[] = "https://github.com/g-truc/glm",
+					ImGui[] = "https://github.com/ocornut/imgui";
 				ImGui::Text("This project is made with help of:");
 				ImGui::Text("TheCherno's OpenGL tutorials:");
 				ImGui::InputText(" ", Chernos, 73);
@@ -281,15 +280,13 @@ void Drawer::OnGuiRender()
 				ImGui::InputText(" ", glm, 30);
 				ImGui::Text("ImGui:");
 				ImGui::InputText(" ", ImGui, 33);
-				ImGui::Text("stb_image.h (i'm not sure if i'll use it):");
-				ImGui::InputText(" ", stb_image, 56);
 
 				ImGui::TreePop();
 			}
 			ImGui::Separator();
 		}
 
-		static unsigned int seed = 0;
+		static unsigned int seed = m_Manager.GetSeed();
 		if (ImGui::InputInt("Seed", (int*)&seed))
 		{
 			m_Manager.SetSeed(seed);
@@ -369,7 +366,8 @@ void Drawer::UpdateTextureIDs()
 		{
 			unsigned char texture[16 * 16 * 4];
 			Chunk chunk(m_ChunksInfo[i].x, m_ChunksInfo[i].y);
-			m_Manager.GenTextureTest(chunk, texture);
+			m_Manager.GenChunk(chunk);
+			m_Manager.GenTexture(chunk, texture);
 			m_Textures.SubImage(texture, i);
 		}
 	}
