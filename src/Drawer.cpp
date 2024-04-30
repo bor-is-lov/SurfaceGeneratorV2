@@ -289,6 +289,15 @@ void Drawer::OnGuiRender()
 			ImGui::Separator();
 		}
 
+		static unsigned int seed = 0;
+		if (ImGui::InputInt("Seed", (int*)&seed))
+		{
+			m_Manager.SetSeed(seed);
+			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+				m_ChunksInfo[i].textureID = -1;
+			UpdateTextureIDs();
+		}
+
 		char x[10], y[10];
 		_itoa_s(-(int)(m_ViewPos[0] * 16), x, 10, 10);
 		_itoa_s(-(int)(m_ViewPos[1] * 16), y, 10, 10);
