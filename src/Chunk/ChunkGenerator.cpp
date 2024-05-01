@@ -55,11 +55,13 @@ void ChunkGenerator::Gen(unsigned int radius, Chunk& chunk)
 				amount++;
 			}
 		}
-		sum *= 16 * radius;
+		sum *= 40 * sqrt(radius);
 		chunk.height[i] = sum / amount;
 		if (chunk.height[i] < -1023)
 			chunk.height[i] = -1023;
 		if (chunk.height[i] > 1024)
 			chunk.height[i] = 1024;
 	}
+
+	delete[] srcChunks;
 }

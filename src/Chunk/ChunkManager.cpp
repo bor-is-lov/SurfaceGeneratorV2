@@ -29,18 +29,18 @@ void ChunkManager::GenTexture(Chunk& chunk, unsigned char texture[16 * 16 * 4])
 		{
 			texture[i * 4]	   = 0; // r
 			texture[i * 4 + 1] = 0; // g
-			texture[i * 4 + 2] = (1023 + chunk.height[i]) * 255 / 1023 ; // b
+			texture[i * 4 + 2] = (1023 + chunk.height[i]) * 255 / 2048 + 32; // b
 		}
 		else if (chunk.height[i] < 128)
 		{
-			texture[i * 4]	   = 200; // r
-			texture[i * 4 + 1] = 200; // g
+			texture[i * 4]	   = 160; // r
+			texture[i * 4 + 1] = 160; // g
 			texture[i * 4 + 2] = chunk.height[i] * 255 / 512; // b
 		}
 		else
 		{
 			texture[i * 4]	   = chunk.height[i] * 255 / 2048; // r
-			texture[i * 4 + 1] = 200; // g
+			texture[i * 4 + 1] = 160; // g
 			texture[i * 4 + 2] = chunk.height[i] * 255 / 2048; // b
 		}
 		texture[i * 4 + 3] = 255;
