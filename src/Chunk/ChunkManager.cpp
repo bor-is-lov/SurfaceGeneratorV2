@@ -18,7 +18,11 @@ void ChunkManager::SetSeed(unsigned int seed)
 
 void ChunkManager::GenChunk(Chunk& chunk)
 {
-	m_Generator->Gen(10, chunk);
+	Chunk chunk1(chunk.x, chunk.y), chunk2(chunk.x, chunk.y);
+	m_Generator->Gen(90, chunk1);
+	m_Generator->Gen(10, chunk2);
+	for (size_t i = 0; i < 256; i++)
+		chunk.height[i] = 0.9 * chunk1.height[i] + 0.1 * chunk2.height[i];
 }
 
 void ChunkManager::GenTexture(Chunk& chunk, unsigned char texture[16 * 16 * 4])
