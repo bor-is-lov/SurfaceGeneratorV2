@@ -1,5 +1,6 @@
 #include "Drawer.h"
 #include <thread>
+#include <random>
 
 struct ChunkInfo
 {
@@ -13,7 +14,7 @@ Drawer::Drawer(GLFWwindow* window)
 	: m_Window(window),
 	m_io(ImGui::GetIO()),
 	m_DrawGUI(true),
-	m_Zoom(4.0f),
+	m_Zoom(30.0f),
 	m_WindowMax(0),
 	m_ViewPos{0.0f, 0.0f},
 	m_Boost{0.0f, 0.0f},
@@ -156,7 +157,10 @@ void Drawer::OnUpdate(float deltaTime)
 				updateTexture = true;
 			}
 			if(updateTexture)
-				m_ChunksInfo[i].textureID = -1;
+				m_Buffer[i * 20 + 4] =
+				m_Buffer[i * 20 + 9] =
+				m_Buffer[i * 20 + 14] =
+				m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID = -1;
 
 			m_Buffer[i * 20]	  =  m_ChunksInfo[i].x;
 			m_Buffer[i * 20 + 1]  =  m_ChunksInfo[i].y;
@@ -297,13 +301,28 @@ void Drawer::OnGuiRender()
 			}
 			ImGui::Separator();
 		}
-		
+
 		static unsigned int seed = m_Manager.GetSeed();
-		if (ImGui::InputInt("Seed", (int*)&seed))
+		if (ImGui::Button("Random seed"))
+		{
+			srand(time(NULL));
+			seed = rand();
+			m_Manager.SetSeed(seed);
+			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+				m_Buffer[i * 20 + 4] =
+				m_Buffer[i * 20 + 9] =
+				m_Buffer[i * 20 + 14] =
+				m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID = -1;
+			UpdateChunks();
+		}
+		if (ImGui::InputInt("Seed", (int*)&seed, 0))
 		{
 			m_Manager.SetSeed(seed);
 			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
-				m_ChunksInfo[i].textureID = -1;
+				m_Buffer[i * 20 + 4] =
+				m_Buffer[i * 20 + 9] =
+				m_Buffer[i * 20 + 14] =
+				m_Buffer[i * 20 + 19] = m_ChunksInfo[i].textureID = -1;
 			UpdateChunks();
 		}
 
