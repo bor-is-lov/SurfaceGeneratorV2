@@ -1,5 +1,5 @@
 #include "Drawer.h"
-#include <iostream>
+#include <thread>
 
 struct ChunkInfo
 {
@@ -24,14 +24,22 @@ Drawer::Drawer(GLFWwindow* window)
 	m_RenderDistance(16),
 	m_MaxRender(false),
 	m_Manager(),
+	m_StopThreads(false),
 
 	m_va(),
 	m_Layout(),
 	m_Shader("res/shaders/shader.vert", "res/shaders/shader.frag"),
-	m_Textures(nullptr, 0, 4096, 16, 16),
+	m_TextureArray(nullptr, 0, 4096, 16, 16),
 	m_Projection(glm::ortho(-1.0f / 9 * 16, 1.0f / 9 * 16, -1.0f, 1.0f, -1.0f, 1.0f)),
 	m_Renderer()
 {
+	int THREADS_AMOUNT = std::thread::hardware_concurrency() - 1;
+	if (THREADS_AMOUNT < 1)
+		THREADS_AMOUNT = 1;
+	m_ThreadIsStoping = new bool[THREADS_AMOUNT];
+	for (size_t i = 0; i < THREADS_AMOUNT; i++)
+		m_ThreadIsStoping[i] = true;
+
 	m_ChunksInfo = new ChunkInfo[CHUNKS_AMOUNT];
 	m_Indeces = new unsigned int[INDECES_AMOUNT];
 	
@@ -74,7 +82,7 @@ Drawer::Drawer(GLFWwindow* window)
 		m_Indeces[i * 6 + 4] = i * 4 + 2;
 		m_Indeces[i * 6 + 5] = i * 4 + 3;
 	}
-	UpdateTextureIDs();
+	UpdateChunks();
 
 	m_vb = new OGL::VertexBuffer(m_Buffer, sizeof(m_Buffer));
 	m_ib = new OGL::IndexBuffer(m_Indeces, INDECES_AMOUNT);
@@ -84,7 +92,7 @@ Drawer::Drawer(GLFWwindow* window)
 	m_Layout.Push<float>(1, 0);
 	m_va.AddBuffer(*m_vb, m_Layout);
 
-	m_Textures.Bind();
+	m_TextureArray.Bind();
 }
 
 Drawer::~Drawer()
@@ -159,9 +167,13 @@ void Drawer::OnUpdate(float deltaTime)
 			m_Buffer[i * 20 + 15] =  m_ChunksInfo[i].x;
 			m_Buffer[i * 20 + 16] =  m_ChunksInfo[i].y + 1.0f;
 		}
-		UpdateTextureIDs();
-		m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
+		UpdateChunks();
 	}
+
+	// update textures
+	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
+		m_TextureArray.SubImage(&m_Textures[i * 16 * 16 * 4], i);
+	m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
 
 	// hide/show GUI
 	if (ImGui::IsKeyPressed(ImGuiKey_Escape) && !m_io.WantTextInput)
@@ -285,14 +297,14 @@ void Drawer::OnGuiRender()
 			}
 			ImGui::Separator();
 		}
-
+		
 		static unsigned int seed = m_Manager.GetSeed();
 		if (ImGui::InputInt("Seed", (int*)&seed))
 		{
 			m_Manager.SetSeed(seed);
 			for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 				m_ChunksInfo[i].textureID = -1;
-			UpdateTextureIDs();
+			UpdateChunks();
 		}
 
 		char x[10], y[10];
@@ -303,7 +315,7 @@ void Drawer::OnGuiRender()
 		ImGui::Text(x);
 		ImGui::SameLine();
 		ImGui::Text(y);
-
+		
 		static int tp[] = {0, 0};
 		if (ImGui::Button("tp to"))
 		{
@@ -324,16 +336,10 @@ void Drawer::OnGuiRender()
 		ImGui::InputInt2(" ", tp);
 
 		if (ImGui::SliderInt("Render distance", (int*)&m_RenderDistance, 0, 48))
-		{
-			UpdateTextureIDs();
-			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
-		}
+			UpdateChunks();
 
 		if (ImGui::Checkbox("Maximum render distance", &m_MaxRender))
-		{
-			UpdateTextureIDs();
-			m_vb->Buffer(m_Buffer, sizeof(m_Buffer));
-		}
+			UpdateChunks();
 
 		ImGui::Separator();
 
@@ -342,33 +348,56 @@ void Drawer::OnGuiRender()
 	}
 }
 
-void Drawer::UpdateTextureIDs()
+void Drawer::UpdateChunks()
 {
+	int THREADS_AMOUNT = std::thread::hardware_concurrency() - 1;
+	if (THREADS_AMOUNT < 1)
+		THREADS_AMOUNT = 1;
+
+	m_StopThreads = true;
+	for (size_t i = 0; i < THREADS_AMOUNT; i++)
+		while (!m_ThreadIsStoping[i]);
+	m_StopThreads = false;
+	for (size_t i = 0; i < THREADS_AMOUNT; i++)
+		m_ThreadIsStoping[i] = false;
+
 	for (size_t i = 0; i < CHUNKS_AMOUNT; i++)
 	{
-		bool updateTexture = (m_ChunksInfo[i].textureID == -1);
-		if (m_MaxRender || (m_ChunksInfo[i].x + m_ViewPos[0]) * (m_ChunksInfo[i].x + m_ViewPos[0]) + (m_ChunksInfo[i].y + m_ViewPos[1]) * (m_ChunksInfo[i].y + m_ViewPos[1]) <= m_RenderDistance * m_RenderDistance)
-			m_Buffer[i * 20 + 4] =
-			m_Buffer[i * 20 + 9] =
-			m_Buffer[i * 20 + 14] =
-			m_Buffer[i * 20 + 19] =
-			m_ChunksInfo[i].textureID = i;
-		else
-		{
+		if (!(m_MaxRender || (m_ChunksInfo[i].x + m_ViewPos[0]) * (m_ChunksInfo[i].x + m_ViewPos[0]) + (m_ChunksInfo[i].y + m_ViewPos[1]) * (m_ChunksInfo[i].y + m_ViewPos[1]) <= m_RenderDistance * m_RenderDistance))
 			m_Buffer[i * 20 + 4] =
 			m_Buffer[i * 20 + 9] =
 			m_Buffer[i * 20 + 14] =
 			m_Buffer[i * 20 + 19] =
 			m_ChunksInfo[i].textureID = -1;
-			updateTexture = false;
-		}
-		if (updateTexture)
-		{
-			unsigned char texture[16 * 16 * 4];
-			Chunk chunk(m_ChunksInfo[i].x, m_ChunksInfo[i].y);
-			m_Manager.GenChunk(chunk);
-			m_Manager.GenTexture(chunk, texture);
-			m_Textures.SubImage(texture, i);
-		}
+	}
+	for (size_t i = 0; i < THREADS_AMOUNT; i++)
+	{
+		int i1 = CHUNKS_AMOUNT / THREADS_AMOUNT * i;
+		int i2 = (i < THREADS_AMOUNT - 1) ? CHUNKS_AMOUNT / THREADS_AMOUNT * (i + 1) : CHUNKS_AMOUNT;
+		std::thread th([](int thread_i, bool& m_StopThreads, bool* m_ThreadIsStoping, int i1, int i2, ChunkInfo* m_ChunksInfo, bool m_MaxRender, float* m_ViewPos, unsigned int m_RenderDistance, float* m_Buffer, ChunkManager& m_Manager, unsigned char* m_Textures)
+			{
+				for (int i = i1; i < i2; i++)
+				{
+					if (m_StopThreads)
+					{
+						m_ThreadIsStoping[thread_i] = true;
+						return;
+					}
+
+					if (m_ChunksInfo[i].textureID == -1 && (m_MaxRender || (m_ChunksInfo[i].x + m_ViewPos[0]) * (m_ChunksInfo[i].x + m_ViewPos[0]) + (m_ChunksInfo[i].y + m_ViewPos[1]) * (m_ChunksInfo[i].y + m_ViewPos[1]) <= m_RenderDistance * m_RenderDistance))
+					{
+						m_Buffer[i * 20 + 4] =
+						m_Buffer[i * 20 + 9] =
+						m_Buffer[i * 20 + 14] =
+						m_Buffer[i * 20 + 19] =
+						m_ChunksInfo[i].textureID = i;
+						Chunk chunk(m_ChunksInfo[i].x, m_ChunksInfo[i].y);
+						m_Manager.GenChunk(chunk);
+						m_Manager.GenTexture(chunk, &m_Textures[i * 16 * 16 * 4]);
+					}
+				}
+				m_ThreadIsStoping[thread_i] = true;
+			}, i, std::ref(m_StopThreads), m_ThreadIsStoping, i1, i2, m_ChunksInfo, m_MaxRender, m_ViewPos, m_RenderDistance, m_Buffer, std::ref(m_Manager), m_Textures);
+		th.detach();
 	}
 }

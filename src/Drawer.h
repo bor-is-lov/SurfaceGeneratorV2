@@ -33,13 +33,16 @@ class Drawer
 	unsigned int m_RenderDistance;
 	bool m_MaxRender;
 	ChunkManager m_Manager;
+	unsigned char m_Textures[CHUNKS_AMOUNT * 16 * 16 * 4];
+	bool m_StopThreads;
+	bool* m_ThreadIsStoping;
 
 	OGL::VertexArray m_va;
 	OGL::VertexBuffer* m_vb;
 	OGL::BufferLayout m_Layout;
 	OGL::IndexBuffer* m_ib;
 	OGL::Shader m_Shader;
-	OGL::TextureArray m_Textures;
+	OGL::TextureArray m_TextureArray;
 	glm::mat4 m_Projection;
 	OGL::Renderer m_Renderer;
 public:
@@ -51,5 +54,5 @@ public:
 	void OnGuiRender();
 
 private:
-	void UpdateTextureIDs();
+	void UpdateChunks();
 };
