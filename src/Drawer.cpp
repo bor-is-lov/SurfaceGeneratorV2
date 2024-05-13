@@ -354,6 +354,7 @@ void Drawer::OnGuiRender()
 				m_Buffer[i * 20 + 19] =
 				m_ChunksInfo[i].textureID = -1;
 			}
+			UpdateChunks();
 		}
 		ImGui::SameLine();
 		ImGui::InputInt2(" ", tp);
