@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "OpenGL/WindowHandler.h"
 #include "Drawer.h"
 
@@ -13,11 +15,16 @@ int main()
 
 	while (!window.ShouldClose())
 	{
+		static float delta = 0.0f;
+		auto startFrame = std::chrono::system_clock::now();
 		window.StartRender();
-		drawer->OnUpdate(0);
+		drawer->OnUpdate(delta);
 		drawer->OnRender();
 		drawer->OnGuiRender();
 		window.EndRender();
+		auto endFrame = std::chrono::system_clock::now();
+		std::chrono::duration<float> deltaTime = endFrame - startFrame;
+		delta = deltaTime.count();
 	}
 
 	delete drawer;

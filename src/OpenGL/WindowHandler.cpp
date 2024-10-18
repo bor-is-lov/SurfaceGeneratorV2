@@ -16,7 +16,7 @@ namespace OGL
 		}
 
 		glfwMakeContextCurrent(m_Window);
-		glfwSwapInterval(1);
+		glfwSwapInterval(0);
 
 		GlCall(glEnable(GL_BLEND));
 		GlCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
