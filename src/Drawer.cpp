@@ -185,7 +185,7 @@ void Drawer::OnUpdate(float deltaTime)
 
 	// move and zoom camera
 	{
-		if (ImGui::IsKeyDown(ImGuiKey_W) && !m_io.WantTextInput && m_Boost[1] > -0.025f)
+		if (ImGui::IsKeyDown(ImGuiKey_W) && !m_io.WantTextInput && m_Boost[1] > -0.25f * deltaTime)
 			m_Boost[1] -= 0.01f * deltaTime;
 		else if (m_Boost[1] < 0.0f)
 		{
@@ -193,7 +193,7 @@ void Drawer::OnUpdate(float deltaTime)
 			if (m_Boost[1] > 0.0f)
 				m_Boost[1] = 0.0f;
 		}
-		if (ImGui::IsKeyDown(ImGuiKey_S) && !m_io.WantTextInput && m_Boost[1] < 0.025f)
+		if (ImGui::IsKeyDown(ImGuiKey_S) && !m_io.WantTextInput && m_Boost[1] < 0.25f * deltaTime)
 			m_Boost[1] += 0.01f * deltaTime;
 		else if (m_Boost[1] > 0.0f)
 		{
@@ -201,7 +201,7 @@ void Drawer::OnUpdate(float deltaTime)
 			if (m_Boost[1] < 0.0f)
 				m_Boost[1] = 0.0f;
 		}
-		if (ImGui::IsKeyDown(ImGuiKey_D) && !m_io.WantTextInput && m_Boost[0] > -0.025f)
+		if (ImGui::IsKeyDown(ImGuiKey_D) && !m_io.WantTextInput && m_Boost[0] > -0.25f * deltaTime)
 			m_Boost[0] -= 0.01f * deltaTime;
 		else if (m_Boost[0] < 0.0f)
 		{
@@ -209,7 +209,7 @@ void Drawer::OnUpdate(float deltaTime)
 			if (m_Boost[0] > 0.0f)
 				m_Boost[0] = 0.0f;
 		}
-		if (ImGui::IsKeyDown(ImGuiKey_A) && !m_io.WantTextInput && m_Boost[0] < 0.025f)
+		if (ImGui::IsKeyDown(ImGuiKey_A) && !m_io.WantTextInput && m_Boost[0] < 0.25f * deltaTime)
 			m_Boost[0] += 0.01f * deltaTime;
 		else if (m_Boost[0] > 0.0f)
 		{
