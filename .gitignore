@@ -35,6 +35,8 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+!Dependencies/GLEW/bin
+!Dependencies/GLEW/bin\**
 !Dependencies/GLEW/bin/Release
 !Dependencies/GLEW/lib/Release
 !Dependencies/GLEW/bin/Release/**
